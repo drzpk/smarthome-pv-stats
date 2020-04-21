@@ -1,1 +1,2 @@
-rootProject.name = "pv-stats"
+rootProject.name = "smart-home"
+include("pv-stats")

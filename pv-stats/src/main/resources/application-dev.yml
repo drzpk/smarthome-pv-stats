@@ -1,0 +1,6 @@
+spring:
+  flyway:
+    validate-on-migrate: false
+
+scheduler:
+  measurement-collection: 0/15 * * * * *
