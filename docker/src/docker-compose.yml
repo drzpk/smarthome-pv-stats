@@ -8,8 +8,8 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ./resources/maria-init:/docker-entrypoint-initdb.d
-      - ./resources/maria-data:/var/lib/mysql
+      - ./resources/maria-init:/docker-entrypoint-initdb.d:z
+      - ./resources/maria-data:/var/lib/mysql:z
     restart: on-failure
     networks:
       - sh-network
@@ -23,7 +23,8 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./config/pv-stats:/app/config
+      - ./config/pv-stats:/app/config:z
+      - ./logs/pv-stats:/app/logs:z
     networks:
       - sh-network
 networks:
