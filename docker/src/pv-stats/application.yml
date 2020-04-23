@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    url: jdbc:mysql://mariadb:3306/pv_stats
+    username: ${PV_STATS_DB_USER}
+    password: ${PV_STATS_DB_PASSWORD}
