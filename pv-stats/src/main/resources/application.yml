@@ -4,9 +4,18 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/pv_test
     username: root
     password: root
+  resources:
+    static-locations: df
 
 scheduler:
   measurement-collection: 0 0/5 * * * *
+
+terminal:
+  users:
+    - login: admin
+      password-sha256: ${ADMIN_PASSWORD_SHA256}
+      roles:
+        - ADMIN
 
 feign:
   httpclient:

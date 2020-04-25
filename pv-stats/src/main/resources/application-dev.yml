@@ -4,3 +4,10 @@ spring:
 
 scheduler:
   measurement-collection: 0/15 * * * * *
+
+terminal:
+  users:
+    - login: dr
+      password-sha256: 'dr' # todo
+      roles:
+        - ADMIN

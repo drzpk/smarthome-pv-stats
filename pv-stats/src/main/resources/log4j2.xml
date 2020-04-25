@@ -24,6 +24,9 @@
             <AppenderRef ref="Console"/>
             <AppenderRef ref="file"/>
         </Logger>
+<!--        <Logger name="org.springframework.security" level="DEBUG" additivity="false">-->
+<!--            <AppenderRef ref="Console"/>-->
+<!--        </Logger>-->
         <Root level="INFO">
             <AppenderRef ref="Console"/>
             <AppenderRef ref="file"/>
