@@ -1,7 +1,7 @@
 package dev.drzepka.pvstats.model.command
 
 class CommandRequest {
-    var commnad = ""
+    var command = ""
 }
 
 data class CommandResponse(var content: Array<String>) {
