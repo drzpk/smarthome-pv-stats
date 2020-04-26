@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.service.command
 
 import dev.drzepka.pvstats.model.command.CommandException
-import dev.drzepka.pvstats.util.CommandPrinter
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.pvstats.util.printer.CommandPrinter
 import org.springframework.stereotype.Service
 
 @Service
@@ -28,7 +28,7 @@ class CommandDispatcher(commands: List<Command>) {
     }
 
     fun findAndExecuteCommand(command: String): Array<String> {
-        // TODO: custom tokenizer (detect parentheses)
+        // TODO: custom tokenizer (detect quotes)
         val printHelp = command.trim().endsWith(" ?")
         val tokens = command.split(Regex("\\s+")).filter { it.isNotBlank() && it != "?" }
 
@@ -41,7 +41,9 @@ class CommandDispatcher(commands: List<Command>) {
         for (i in tokens.indices) {
             val token = tokens[i]
             val node = currentNode.getNode(token)
-            if (node != null && i == tokens.size - 1) {
+            val cmd = if (node == null) currentNode.getCommand(token) else null
+
+            if (node == null && cmd == null && i == tokens.size - 1) {
                 val analyzedTokens = tokens.subList(0, i + 1).joinToString(separator = " ")
                 throw CommandException("$analyzedTokens: command not found")
             } else if (node != null) {
@@ -49,7 +51,6 @@ class CommandDispatcher(commands: List<Command>) {
                 continue
             }
 
-            val cmd = currentNode.getCommand(token)
             if (cmd == null) {
                 val analyzedTokens = tokens.subList(0, i + 1).joinToString(separator = " ")
                 throw CommandException("$analyzedTokens: command not found")
@@ -59,7 +60,7 @@ class CommandDispatcher(commands: List<Command>) {
                 val args = if (i < tokens.size - 1) tokens.subList(i + 1, tokens.size) else emptyList()
                 executeCommand(cmd, args)
             } else {
-                CommandPrinter.getHelp(currentNode)
+                CommandPrinter.getHelp(cmd)
             }
         }
 

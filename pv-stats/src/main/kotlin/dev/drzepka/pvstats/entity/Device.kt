@@ -1,9 +1,11 @@
 package dev.drzepka.pvstats.entity
 
 import dev.drzepka.pvstats.model.DeviceType
-import javax.annotation.Generated
-import javax.persistence.*
-import kotlin.random.Random
+import java.util.*
+import javax.persistence.Entity
+import javax.persistence.EnumType
+import javax.persistence.Enumerated
+import javax.persistence.Id
 
 @Entity
 class Device {
@@ -14,6 +16,7 @@ class Device {
     var description: String? = null
     @Enumerated(EnumType.STRING)
     var type: DeviceType = DeviceType.UNKNOWN
+    var createdAt = Date()
     var active: Boolean = true
 
     var apiUrl: String = ""
