@@ -1,6 +1,6 @@
 package dev.drzepka.pvstats.service.command
 
-import dev.drzepka.pvstats.model.command.CommandException
+import dev.drzepka.pvstats.model.CommandException
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
@@ -28,14 +28,21 @@ class CommandDispatcherTest {
         Assertions.assertTrue { parsed.containsKey("novalue") }
     }
 
+    @Test
+    fun `getNamedArgs - required`() {
+        Assertions.assertThrows(CommandException::class.java) {
+            checkParser("")
+        }
+    }
+
     private fun checkParser(input: String): Map<String, String?> {
         val dispatcher = CommandDispatcher(emptyList())
-        return dispatcher.getNamedArgs(getKnownArgs(), input.split(Regex("\\s+")))
+        return dispatcher.getNamedArgs(getKnownArgs(), input.split(Regex("\\s+")), arrayListOf())
     }
 
     private fun getKnownArgs(): List<Argument> {
         return listOf(
-                Argument("valued", "desc", true),
+                Argument("valued", "desc", hasValue = true, required = true),
                 Argument("novalue", "desc", false),
                 Argument("other", "desc", true)
         )

@@ -8,12 +8,14 @@ object CommandPrinter {
 
     fun getHelp(node: CommandNode): Array<String> {
         val list = ArrayList<String>()
-        val group = node.group!!
+        val group = node.group
 
-        list.add("")
-        list.add("Group: " + getHierarchy(group))
-        list.add("Description: " + group.description)
-        list.add("")
+        if (group != null) {
+            list.add("")
+            list.add("Group: " + getHierarchy(group))
+            list.add("Description: " + group.description)
+            list.add("")
+        }
 
         val groups = node.getNodes()
         if (groups.isNotEmpty()) {
@@ -29,7 +31,7 @@ object CommandPrinter {
         if (cmds.isNotEmpty()) {
             list.add("Available commands:")
             cmds.forEach {
-                list.add("  --${it.name} - ${it.description}")
+                list.add("  ${it.name} - ${it.description}")
             }
             list.add("")
         }
@@ -42,13 +44,16 @@ object CommandPrinter {
         result.add("")
         result.add("Command: " + getHierarchy(command))
         result.add("Description: ${command.description}")
+        if (command.positionalArgCount() > 0)
+            result.add("Positional arguments: ${command.positionalArgsUsage()}")
         result.add("")
 
         if (command.getArguments().isNotEmpty()) {
             result.add("Arguments:")
             command.getArguments().forEach {
                 val value = if (it.hasValue) " <value>" else ""
-                result.add("  ${it.name}$value - ${it.description}")
+                val req = if (it.required) " (required)" else ""
+                result.add("  --${it.name}$value - ${it.description}$req")
             }
             result.add("")
         }
@@ -57,9 +62,10 @@ object CommandPrinter {
     }
 
     private fun getHierarchy(invocable: Invocable?, first: Boolean = true): String {
+        // FIXME: "device > list" should be "device list"
         if (invocable == null)
             return ""
         val suffix = if (first) "" else " > "
-        return getHierarchy(invocable.group) + invocable.name + suffix
+        return getHierarchy(invocable.group, false) + invocable.name + suffix
     }
 }

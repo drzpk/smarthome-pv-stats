@@ -1,7 +1,9 @@
 package dev.drzepka.pvstats.service.command
 
-import dev.drzepka.pvstats.model.command.CommandException
+import dev.drzepka.pvstats.model.ApplicationException
+import dev.drzepka.pvstats.model.CommandException
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.pvstats.util.Tokenizer
 import dev.drzepka.pvstats.util.printer.CommandPrinter
 import org.springframework.stereotype.Service
 
@@ -19,7 +21,7 @@ class CommandDispatcher(commands: List<Command>) {
     fun dispatchCommand(command: String): Array<String> {
         return try {
             findAndExecuteCommand(command)
-        } catch (e: CommandException) {
+        } catch (e: ApplicationException) {
             arrayOf("Error while executing command", e.message!!)
         } catch (e: Exception) {
             log.error("Unexpected error while executing command: $command", e)
@@ -28,9 +30,12 @@ class CommandDispatcher(commands: List<Command>) {
     }
 
     fun findAndExecuteCommand(command: String): Array<String> {
-        // TODO: custom tokenizer (detect quotes)
-        val printHelp = command.trim().endsWith(" ?")
-        val tokens = command.split(Regex("\\s+")).filter { it.isNotBlank() && it != "?" }
+        var tokens = Tokenizer.tokenize(command)
+        val printHelp = tokens.isNotEmpty() && tokens.last() == "?"
+        if (printHelp) tokens = tokens.dropLast(1)
+
+        if (tokens.isEmpty() && printHelp)
+            return CommandPrinter.getHelp(rootNode)
 
         if (tokens.isEmpty()) {
             // Empty command
@@ -38,11 +43,12 @@ class CommandDispatcher(commands: List<Command>) {
         }
 
         var currentNode = rootNode
+        var cmd: Command?
         for (i in tokens.indices) {
             val token = tokens[i]
             val node = currentNode.getNode(token)
-            val cmd = if (node == null) currentNode.getCommand(token) else null
 
+            cmd = if (node == null) currentNode.getCommand(token) else null
             if (node == null && cmd == null && i == tokens.size - 1) {
                 val analyzedTokens = tokens.subList(0, i + 1).joinToString(separator = " ")
                 throw CommandException("$analyzedTokens: command not found")
@@ -72,16 +78,21 @@ class CommandDispatcher(commands: List<Command>) {
     }
 
     internal fun executeCommand(cmd: Command, args: List<String>): Array<String> {
-        return cmd.execute(getNamedArgs(cmd.getArguments(), args), getPositionalArgs(cmd, args))
+        val positionalArgs = ArrayList<String>()
+        val namedArgs = getNamedArgs(cmd.getArguments(), args, positionalArgs)
+        return cmd.execute(namedArgs, getPositionalArgs(cmd, positionalArgs))
     }
 
-    internal fun getNamedArgs(knownArgs: List<Argument>, args: List<String>): Map<String, String?> {
+    internal fun getNamedArgs(knownArgs: List<Argument>, args: List<String>, leftovers: MutableList<String>): Map<String, String?> {
         val foundArgs = HashMap<String, String?>()
         var pos = 0
         while (pos < args.size) {
             var current = args[pos]
-            if (!current.startsWith("-"))
+            if (!current.startsWith("-")) {
+                leftovers.add(current)
+                pos++
                 continue
+            }
             if (!current.matches(Regex("--\\S+")))
                 throw CommandException("Unrecognized argument pattern: $current")
             current = current.replace("--", "")
@@ -102,13 +113,18 @@ class CommandDispatcher(commands: List<Command>) {
             foundArgs[arg.name] = value
         }
 
+        knownArgs.filter { it.required }.forEach {
+            if (!foundArgs.containsKey(it.name))
+                throw CommandException("Argument '${it.name}' is required but wasn't specified")
+        }
+
         return foundArgs
     }
 
     internal fun getPositionalArgs(cmd: Command, args: List<String>): List<String> {
         val positional = args.filter { !it.startsWith("-") }
-        if (positional.size > cmd.positionalArgCount)
-            throw CommandException("Required ${cmd.positionalArgCount} argument but got ${positional.size}")
+        if (positional.size > cmd.positionalArgCount())
+            throw CommandException("Required ${cmd.positionalArgCount()} argument but got ${positional.size}")
 
         return positional
     }
