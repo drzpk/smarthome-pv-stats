@@ -1,6 +1,9 @@
 package dev.drzepka.pvstats.autoconfiguration
 
 import dev.drzepka.pvstats.config.TerminalConfig
+import dev.drzepka.pvstats.repository.DataSourceRepository
+import dev.drzepka.pvstats.service.datasource.DataSourceUserDetailsService
+import dev.drzepka.pvstats.util.CompositeUserDetailsService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -16,7 +19,10 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
 
 @Configuration
 @EnableWebSecurity
-class SecurityAutoConfiguration(private val terminalConfig: TerminalConfig) : WebSecurityConfigurerAdapter() {
+class SecurityAutoConfiguration(
+        private val terminalConfig: TerminalConfig,
+        private val dataSourceRepository: DataSourceRepository
+) : WebSecurityConfigurerAdapter() {
 
     private val log by Logger()
 
@@ -30,7 +36,7 @@ class SecurityAutoConfiguration(private val terminalConfig: TerminalConfig) : We
                 .and()
                 .httpBasic()
                 .and()
-                .csrf().disable();
+                .csrf().disable()
     }
 
     @Bean
@@ -42,7 +48,8 @@ class SecurityAutoConfiguration(private val terminalConfig: TerminalConfig) : We
     override fun userDetailsService(): UserDetailsService {
         val manager = InMemoryUserDetailsManager()
         addUsers(manager)
-        return manager
+        val userDetails = DataSourceUserDetailsService(dataSourceRepository)
+        return CompositeUserDetailsService(listOf(userDetails, manager))
     }
 
     private fun addUsers(manager: InMemoryUserDetailsManager) {

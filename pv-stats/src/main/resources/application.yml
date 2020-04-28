@@ -6,6 +6,8 @@ spring:
     password: root
   resources:
     static-locations: df
+  jpa:
+    open-in-view: false
 
 scheduler:
   measurement-collection: 0 0/5 * * * *

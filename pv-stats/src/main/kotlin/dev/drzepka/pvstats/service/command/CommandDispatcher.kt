@@ -123,7 +123,7 @@ class CommandDispatcher(commands: List<Command>) {
 
     internal fun getPositionalArgs(cmd: Command, args: List<String>): List<String> {
         val positional = args.filter { !it.startsWith("-") }
-        if (positional.size > cmd.positionalArgCount())
+        if (positional.size != cmd.positionalArgCount())
             throw CommandException("Required ${cmd.positionalArgCount()} argument but got ${positional.size}")
 
         return positional
