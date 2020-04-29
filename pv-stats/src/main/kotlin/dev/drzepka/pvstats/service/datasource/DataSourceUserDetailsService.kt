@@ -14,7 +14,7 @@ class DataSourceUserDetailsService(private val dataSourceRepository: DataSourceR
         val dataSource = dataSourceRepository.findByUser(username!!) ?: throw UsernameNotFoundException(username)
 
         return object : UserDetails {
-            override fun getAuthorities(): MutableCollection<out GrantedAuthority> = mutableListOf(SimpleGrantedAuthority(Role.VIEWER.name))
+            override fun getAuthorities(): MutableCollection<out GrantedAuthority> = mutableListOf(SimpleGrantedAuthority(Role.VIEWER))
 
             override fun isEnabled(): Boolean = true
 

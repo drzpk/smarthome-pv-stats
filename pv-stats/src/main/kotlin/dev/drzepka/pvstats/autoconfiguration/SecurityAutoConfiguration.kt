@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.autoconfiguration
 
+import dev.drzepka.pvstats.Role
 import dev.drzepka.pvstats.config.TerminalConfig
 import dev.drzepka.pvstats.repository.DataSourceRepository
 import dev.drzepka.pvstats.service.datasource.DataSourceUserDetailsService
@@ -28,6 +29,7 @@ class SecurityAutoConfiguration(
 
     override fun configure(http: HttpSecurity?) {
         http!!.authorizeRequests()
+                .antMatchers("/assets/**", "/terminal/**", "/command/**").hasAnyAuthority(Role.ADMIN)
                 .anyRequest().authenticated()
                 .and()
                 .formLogin()

@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats
 
-enum class Role {
-    ADMIN, VIEWER
+object Role {
+    const val ADMIN = "ROLE_ADMIN"
+    const val VIEWER = "ROLE_VIEWER"
 }

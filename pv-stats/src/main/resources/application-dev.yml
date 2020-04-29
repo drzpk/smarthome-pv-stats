@@ -10,4 +10,4 @@ terminal:
     - login: dr
       password-sha256: 'dr' # todo
       roles:
-        - ADMIN
+        - ROLE_ADMIN
