@@ -68,12 +68,14 @@ class DataSourceService(
         dataSourceRepository.delete(dataSource)
     }
 
+    @Transactional(Transactional.TxType.REQUIRES_NEW)
     fun resetPassword(dataSourceId: Int): DataSourceCredentials {
         log.info("Resetting password for data source $dataSourceId")
         var dataSource = dataSourceRepository.findById(dataSourceId).orElse(null)
                 ?: throw ApplicationException("data source with id $dataSourceId wasn't found")
 
         val plainPassword = generateUserPassword()
+        schemaManagementRepository.changeUserPassword(dataSource.user, plainPassword)
         dataSource.password = passwordEncoder.encode(plainPassword)
         dataSource = dataSourceRepository.save(dataSource)
 

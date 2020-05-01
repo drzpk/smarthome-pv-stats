@@ -25,9 +25,16 @@ class SchemaManagementRepositoryImpl(private val entityManager: EntityManager) :
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 
-    override fun dropUser(userName: String) {
-        validateString(userName)
-        val queryString = "drop user if exists `$userName`"
+    override fun dropUser(user: String) {
+        validateString(user)
+        val queryString = "drop user if exists `$user`"
+        entityManager.createNativeQuery(queryString).executeUpdate()
+    }
+
+    override fun changeUserPassword(user: String, password: String) {
+        validateString(user)
+        validateString(password)
+        val queryString = "alter user `$user`@`%` identified by '$password'"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 

@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/command")
+@RequestMapping("/api/command")
 class CommandController(private val commandDispatcher: CommandDispatcher) {
 
     @PostMapping("execute")

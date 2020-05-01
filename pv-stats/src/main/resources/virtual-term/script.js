@@ -140,7 +140,7 @@ var prompt = {
 
         var that = this;
         var xhr = new XMLHttpRequest();
-        xhr.open("POST", "command/execute");
+        xhr.open("POST", "api/command/execute");
         xhr.setRequestHeader("Content-Type", "application/json");
         xhr.send(JSON.stringify(payload));
         xhr.onreadystatechange = function () {

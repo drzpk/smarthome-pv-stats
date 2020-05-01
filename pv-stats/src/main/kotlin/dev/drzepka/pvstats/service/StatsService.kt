@@ -1,7 +1,7 @@
 package dev.drzepka.pvstats.service
 
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
-import dev.drzepka.pvstats.model.CurrentStatsResponse
+import dev.drzepka.pvstats.model.CurrentStats
 import dev.drzepka.pvstats.model.DataSourceUserDetails
 import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.web.client.sma.SMAApiClient
@@ -14,7 +14,7 @@ import java.net.URI
 class StatsService(private val smaApiClient: SMAApiClient) {
 
     @Cacheable(value = [CachingAutoConfiguration.CACHE_SMA_CURRENT_STATS], keyGenerator = CachingAutoConfiguration.KEY_GENERATOR_DEVICE_ID)
-    fun getCurrentStats(): CurrentStatsResponse? {
+    fun getCurrentStats(): CurrentStats? {
         val userDetails = SecurityContextHolder.getContext().authentication.principal as DataSourceUserDetails
         val device = userDetails.dataSource.device!!
         return when (device.type) {
@@ -23,8 +23,8 @@ class StatsService(private val smaApiClient: SMAApiClient) {
         }
     }
 
-    private fun getSMAStats(apiUrl: String): CurrentStatsResponse {
+    private fun getSMAStats(apiUrl: String): CurrentStats {
         val dashValues = smaApiClient.getDashValues(URI.create(apiUrl))
-        return CurrentStatsResponse(dashValues.getPower(), dashValues.getDeviceName())
+        return CurrentStats(dashValues.getPower(), dashValues.getDeviceName())
     }
 }

@@ -4,7 +4,8 @@ interface SchemaManagementRepository {
     fun getSchemaName(): String
     fun getSchemaVersion(): Int
     fun createUser(user: String, password: String)
-    fun dropUser(userName: String)
+    fun dropUser(user: String)
+    fun changeUserPassword(user: String, password: String)
     fun createView(viewName: String, targetTableName: String, deviceId: Int)
     fun getViewNames(): List<String>
     fun dropView(viewName: String)
