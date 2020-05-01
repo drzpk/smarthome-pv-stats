@@ -1,10 +1,10 @@
 package dev.drzepka.pvstats.service.connector
 
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
+import dev.drzepka.pvstats.loadTestJsonData
 import dev.drzepka.pvstats.model.device.sma.Entry
+import dev.drzepka.pvstats.model.device.sma.SMADashValues
 import dev.drzepka.pvstats.model.device.sma.SMADeviceData
 import dev.drzepka.pvstats.model.device.sma.SMAMeasurement
 import dev.drzepka.pvstats.web.client.sma.SMAFeignClient
@@ -21,7 +21,7 @@ class SMAConnectorTest {
 
     @Test
     fun `verify data format`() {
-        val realData = loadData()
+        val realData = loadTestJsonData<SMAMeasurement>(MEASUREMENT_FILENAME)
 
         val connector = SMAConnector(getApiClient(realData))
         val measurements = connector.collectMeasurements(getDevice(), getFirstMeasurement())
@@ -49,6 +49,7 @@ class SMAConnectorTest {
 
     private fun getApiClient(source: SMAMeasurement = createData()): SMAFeignClient = object : SMAFeignClient {
         override fun getDashLogger(uri: URI): SMAMeasurement = source
+        override fun getDashValues(uri: URI): SMADashValues = SMADashValues()
     }
 
     private fun createData(): SMAMeasurement {
@@ -73,14 +74,7 @@ class SMAConnectorTest {
         return measurement
     }
 
-    private fun loadData(): SMAMeasurement {
-        val mapper = ObjectMapper()
-        mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-
-        return mapper.readValue(javaClass.classLoader.getResourceAsStream(MEASUREMENT_FILENAME), SMAMeasurement::class.java)
-    }
-
     companion object {
-        private const val MEASUREMENT_FILENAME = "sma_measurement_data.json"
+        private const val MEASUREMENT_FILENAME = "sma_measurement_data"
     }
 }

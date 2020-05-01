@@ -18,6 +18,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-devtools")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign:2.2.2.RELEASE")
@@ -32,6 +33,8 @@ dependencies {
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.2")
     implementation("org.springframework.session:spring-session-core")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.1")
+    implementation("javax.cache:cache-api:1.1.1")
+    implementation("org.ehcache:ehcache:3.8.1")
 
     runtimeOnly("mysql:mysql-connector-java")
 

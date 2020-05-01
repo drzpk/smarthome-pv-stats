@@ -2,6 +2,7 @@ package dev.drzepka.pvstats.web.client.sma
 
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.device.sma.Entry
+import dev.drzepka.pvstats.model.device.sma.SMADashValues
 import dev.drzepka.pvstats.model.device.sma.SMADeviceData
 import dev.drzepka.pvstats.model.device.sma.SMAMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
@@ -45,6 +46,13 @@ class SMAMockClient(private val measurementRepository: MeasurementRepository) : 
         }
 
         return createData(entries)
+    }
+
+    override fun getDashValues(uri: URI): SMADashValues {
+        return object : SMADashValues() {
+            override fun getPower(): Int = Random.Default.nextInt(500, 3000)
+            override fun getDeviceName(): String = "Test SMA device"
+        }
     }
 
     private fun getRandomEntry(previous: Entry): Entry {

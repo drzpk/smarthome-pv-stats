@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.web.client.sma
 
+import dev.drzepka.pvstats.model.device.sma.SMADashValues
 import dev.drzepka.pvstats.model.device.sma.SMAMeasurement
 import org.springframework.cloud.openfeign.FeignClient
 import org.springframework.context.annotation.Profile
@@ -12,4 +13,7 @@ interface SMAFeignClient : SMAApiClient {
 
     @GetMapping("dyn/getDashLogger.json")
     override fun getDashLogger(uri: URI): SMAMeasurement
+
+    @GetMapping("dyn/getDashValues.json")
+    override fun getDashValues(uri: URI): SMADashValues
 }
