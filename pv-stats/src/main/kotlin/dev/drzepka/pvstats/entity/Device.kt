@@ -2,14 +2,12 @@ package dev.drzepka.pvstats.entity
 
 import dev.drzepka.pvstats.model.DeviceType
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.EnumType
-import javax.persistence.Enumerated
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
 class Device {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
 
     var name: String = ""

@@ -36,7 +36,7 @@ dependencies {
     implementation("javax.cache:cache-api:1.1.1")
     implementation("org.ehcache:ehcache:3.8.1")
 
-    runtimeOnly("mysql:mysql-connector-java")
+    runtimeOnly("org.mariadb.jdbc:mariadb-java-client:2.6.0")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test") {
         exclude(group = "org.junit.vintage", module = "junit-vintage-engine")

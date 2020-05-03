@@ -9,6 +9,8 @@ import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.support.TransactionTemplate
 import java.security.SecureRandom
 import javax.annotation.PostConstruct
 import javax.transaction.Transactional
@@ -19,16 +21,20 @@ class DataSourceService(
         private val deviceService: DeviceService,
         private val dataSourceRepository: DataSourceRepository,
         private val schemaManagementRepository: SchemaManagementRepository,
-        private val passwordEncoder: PasswordEncoder
+        private val passwordEncoder: PasswordEncoder,
+        transactionManager: PlatformTransactionManager
 ) {
 
     private val log by Logger()
+    private val transactionTemplate = TransactionTemplate(transactionManager)
     private val secureRandom = SecureRandom()
 
     @PostConstruct
     fun init() {
         checkAvailableViewNames()
-        checkDataSources()
+        transactionTemplate.execute {
+            checkDataSources()
+        }
     }
 
     @Transactional(Transactional.TxType.REQUIRES_NEW)
