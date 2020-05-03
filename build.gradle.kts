@@ -6,5 +6,5 @@ allprojects {
 
 subprojects {
     group = "dev.drzepka"
-    version = "0.0.1-SNAPSHOT"
+    version = "1.0.0"
 }
