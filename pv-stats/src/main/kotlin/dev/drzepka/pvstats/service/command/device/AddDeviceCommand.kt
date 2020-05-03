@@ -6,7 +6,6 @@ import dev.drzepka.pvstats.service.command.Argument
 import dev.drzepka.pvstats.service.command.Command
 import dev.drzepka.pvstats.util.CommandUtils
 import org.springframework.stereotype.Component
-import java.net.URI
 
 @Component
 class AddDeviceCommand(private val deviceService: DeviceService) : Command {
@@ -17,17 +16,8 @@ class AddDeviceCommand(private val deviceService: DeviceService) : Command {
 
     override fun execute(namedArguments: Map<String, String?>, positionalArguments: List<String>): Array<String> {
         val name = namedArguments.getValue(ARG_NAME)!!
-        CommandUtils.checkArgLength(ARG_NAME, name, maxLength = 128)
         val description = namedArguments.getValue(ARG_DESCRIPTION)!!
-        CommandUtils.checkArgLength(ARG_DESCRIPTION, description, maxLength = 255)
         val apiUrl = namedArguments.getValue(ARG_API_URL)!!
-        CommandUtils.checkArgLength(ARG_API_URL, apiUrl, maxLength = 128)
-
-        try {
-            URI.create(apiUrl)
-        } catch (e: IllegalArgumentException) {
-            return CommandUtils.error("Given api url is not valid url")
-        }
 
         val typeString = namedArguments.getValue(ARG_TYPE)!!
         val type = try {
