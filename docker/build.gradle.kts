@@ -9,7 +9,6 @@ val pvStatsProject = findProject(":pv-stats")!!
 val sourceDirectory = File(projectDir, "src")
 val bundleDirectory = File(buildDir, "bundle")
 val imagesDirectory = File(bundleDirectory, "install")
-val resourcesToFilter = listOf(Pair("mariadb/init.sql", "resources/maria-init"))
 val propertiesToAppendToEnv = mapOf(Pair("PV_STATS_VERSION", pvStatsProject.version))
 
 val envProperties = java.util.Properties()
@@ -24,10 +23,11 @@ tasks.register("dockerCompose") {
 }
 
 tasks.register("createArchive", type = Zip::class) {
-    dependsOn("copyResources", "filterResources", "saveImages")
+    dependsOn("copyResources", "saveImages")
 
     from(bundleDirectory)
     include("**/*")
+    exclude("**/maria-data", "**/grafana-data")
     archiveBaseName.set("smart-home")
     archiveVersion.set(pvStatsProject.version.toString())
     destinationDirectory.set(buildDir)
@@ -82,13 +82,27 @@ tasks.register("copyArtifacts", type = Copy::class) {
 
 tasks.register("copyResources", type = Copy::class) {
     from(sourceDirectory) {
-        include(".env", "*.yml")
+        include(".env", "*.yml", "*.md")
         into(".")
     }
 
-    from("src/pv-stats") {
+    from(File(sourceDirectory, "pv-stats")) {
         include("*.yml", "*.xml")
         into("config/pv-stats")
+    }
+
+    from(File(sourceDirectory, "mariadb")) {
+        into("resources/maria-init")
+    }
+
+    from(File(sourceDirectory, "httpd")) {
+        include("pv-stats.conf")
+        into("config/httpd")
+    }
+
+    from(File(sourceDirectory, "httpd")) {
+        include("**/entrypoint.sh")
+        into("resources/httpd")
     }
 
     destinationDir = bundleDirectory
@@ -103,25 +117,15 @@ tasks.register("copyResources", type = Copy::class) {
     }
 }
 
-tasks.register("filterResources") {
-    doLast {
-        resourcesToFilter.forEach {
-            val file = File(sourceDirectory, it.first)
-            val filtered = swapPlaceholders(file.readText())
-            val outDir = File(bundleDirectory, it.second)
-            if (!outDir.isDirectory)
-                outDir.mkdirs()
-            val outFile = File(outDir, file.name)
-            outFile.writeText(filtered)
+class EnvTransformer : Transformer<String, String> {
+
+    override fun transform(`in`: String): String {
+        var output = ""
+        for (propertyName in envProperties.propertyNames()) {
+            output = output.replace("\${$propertyName}", envProperties[propertyName].toString(), false)
         }
-    }
-}
 
-fun swapPlaceholders(input: String): String {
-    var output = input
-    for (propertyName in envProperties.propertyNames()) {
-        output = output.replace("\${$propertyName}", envProperties[propertyName].toString(), false)
+        return output
     }
 
-    return output
 }
