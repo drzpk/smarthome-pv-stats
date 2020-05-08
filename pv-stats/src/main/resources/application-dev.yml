@@ -1,9 +1,15 @@
 spring:
   flyway:
     validate-on-migrate: false
+#  jpa:
+#    show-sql: true
+#    properties:
+#      hibernate:
+#        format_sql: true
 
 scheduler:
   measurement-collection: 0/15 * * * * *
+  daily-summary: 0 0/5 * * * *
 
 terminal:
   users:

@@ -14,4 +14,9 @@ interface MeasurementRepository : CrudRepository<EnergyMeasurement, Date> {
 
     @Query("select * from energy_measurement where device_id = ?1 order by timestamp desc limit 1", nativeQuery = true)
     fun findLast(deviceId: Int): EnergyMeasurement?
+
+    @Query("select * from energy_measurement where device_id = ?1 and timestamp between ?2 and ?3", nativeQuery = true)
+    fun findForDateRange(deviceId: Int, fromInclusive: Date, toInclusive: Date): List<EnergyMeasurement>
+
+    fun findFirstByDeviceIdOrderByTimestampAsc(deviceId: Int): EnergyMeasurement?
 }

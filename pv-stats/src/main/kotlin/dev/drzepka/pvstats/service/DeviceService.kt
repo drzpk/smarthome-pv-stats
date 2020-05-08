@@ -27,6 +27,8 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
 
     fun getDevice(id: Int): Device? = deviceRepository.findById(id).orElse(null)
 
+    fun getActiveDevices(): List<Device> = deviceRepository.findByActive(true)
+
     fun addDevice(name: String, description: String, type: DeviceType, apiUrl: String): Device {
         validateName(name, true)
         validateDescription(description, true)

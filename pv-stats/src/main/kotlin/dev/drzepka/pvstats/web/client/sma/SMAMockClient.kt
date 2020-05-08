@@ -39,10 +39,13 @@ class SMAMockClient(private val measurementRepository: MeasurementRepository) : 
         entries.ensureCapacity(iterations)
 
         var previous = lastEntry
+        var date = lastMeasurement.timestamp.toInstant()
         repeat(iterations) {
             val current = getRandomEntry(previous)
+            current.t = Date.from(date)
             entries.add(current)
             previous = current
+            date = date.plusSeconds(INTERVAL.seconds)
         }
 
         return createData(entries)

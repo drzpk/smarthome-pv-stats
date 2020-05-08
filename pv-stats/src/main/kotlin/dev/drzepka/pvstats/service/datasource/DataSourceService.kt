@@ -163,7 +163,7 @@ class DataSourceService(
                     .joinToString(separator = "")
 
     companion object {
-        internal val AVAILABLE_VIEWS = listOf("energy_measurement")
+        internal val AVAILABLE_VIEWS = listOf("energy_measurement", "energy_measurement_daily_summary")
 
         private const val VIEW_PREFIX = "view_"
         private const val USER_PREFIX = "viewer_"
