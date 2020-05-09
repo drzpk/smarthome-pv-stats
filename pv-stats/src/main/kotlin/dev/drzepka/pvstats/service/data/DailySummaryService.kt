@@ -22,6 +22,7 @@ class DailySummaryService(
 
     private val log by Logger()
 
+    @Synchronized
     @Scheduled(cron = "\${scheduler.daily-summary}")
     fun createSummary() {
         log.info("Creating energy daily summary")
