@@ -26,8 +26,9 @@ class MeasurementService(
     fun collectMeasurements() {
         log.debug("Starting measurement collection")
 
+        // todo: move data gathering logic to logger
         deviceService.getActiveDevices().forEach {
-            val connector = connectorFactory.getConnector(it.type)
+            val connector = connectorFactory.getConnector(it.type) ?: return@forEach
             val lastStoredMeasuremnt = getLastMeasurement(it)
             val measurements = connector.collectMeasurements(it, lastStoredMeasuremnt)
 

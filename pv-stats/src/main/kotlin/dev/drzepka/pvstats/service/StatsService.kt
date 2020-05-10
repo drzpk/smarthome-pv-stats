@@ -19,6 +19,7 @@ class StatsService(private val smaApiClient: SMAApiClient) {
         val device = userDetails.dataSource.device!!
         return when (device.type) {
             DeviceType.SMA -> getSMAStats(device.apiUrl)
+            DeviceType.SOFAR -> TODO()
             DeviceType.UNKNOWN -> null
         }
     }

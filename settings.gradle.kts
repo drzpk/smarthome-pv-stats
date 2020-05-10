@@ -1,2 +1,2 @@
 rootProject.name = "smart-home"
-include("pv-stats", "docker")
+include("common", "pv-stats", "data-logger", "docker")

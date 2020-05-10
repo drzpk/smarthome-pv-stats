@@ -1,10 +1,7 @@
 package dev.drzepka.pvstats.entity
 
 import java.util.*
-import javax.persistence.Entity
-import javax.persistence.GeneratedValue
-import javax.persistence.GenerationType
-import javax.persistence.Id
+import javax.persistence.*
 
 @Entity
 class EnergyMeasurement {
@@ -15,5 +12,7 @@ class EnergyMeasurement {
 
     var totalWh: Int = 0 // Until now
     var deltaWh: Int = 0 // Since last measurement
+    @Column(name = "power_w")
+    var powerW: Int = 0
     var deviceId: Int = 0
 }

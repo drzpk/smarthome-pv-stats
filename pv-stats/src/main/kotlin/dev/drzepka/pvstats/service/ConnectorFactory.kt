@@ -6,6 +6,5 @@ import org.springframework.stereotype.Component
 
 @Component
 class ConnectorFactory(private val connectors: List<Connector>) {
-    fun getConnector(type: DeviceType): Connector = connectors.firstOrNull { it.type == type }
-            ?: throw IllegalArgumentException("No connector found for device type $type")
+    fun getConnector(type: DeviceType): Connector? = connectors.firstOrNull { it.type == type }
 }
