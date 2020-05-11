@@ -58,13 +58,19 @@ class CachingAutoConfiguration {
 
         val deviceDataCache = CacheConfigurationBuilder
                 .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(30))
-                .withExpiry(ExpiryPolicyBuilder.timeToIdleExpiration(Duration.ofHours(2)))
+                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(2)))
+                .build()
+
+        val lastVendorDataCache = CacheConfigurationBuilder
+                .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(30))
+                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10)))
                 .build()
 
         return mapOf(
                 Pair(CACHE_SMA_CURRENT_STATS, smaCurrentStatsConfig),
                 Pair(CACHE_LAST_MEASUREMENTS, lastMeasurementCache),
-                Pair(CACHE_DEVICE_DATA, deviceDataCache)
+                Pair(CACHE_DEVICE_DATA, deviceDataCache),
+                Pair(CACHE_LAST_VENDOR_DATA, lastVendorDataCache)
         )
     }
 
@@ -74,6 +80,7 @@ class CachingAutoConfiguration {
         const val CACHE_SMA_CURRENT_STATS = "smaCurrentStats"
         const val CACHE_LAST_MEASUREMENTS = "lastMeasurements"
         const val CACHE_DEVICE_DATA = "deviceData"
+        const val CACHE_LAST_VENDOR_DATA = "lastVendorData"
         const val KEY_GENERATOR_DEVICE_ID = "deviceIdKeyGenerator"
     }
 }

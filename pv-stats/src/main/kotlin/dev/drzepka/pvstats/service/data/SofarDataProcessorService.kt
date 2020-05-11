@@ -17,19 +17,20 @@ import kotlin.math.floor
 @Service
 class SofarDataProcessorService(
         private val deviceDataService: DeviceDataService,
-        private val cacheManager: CacheManager,
-        private val measurementRepository: MeasurementRepository
-) : DataProcessorService<SofarData>(SofarData::class) {
+        private val measurementRepository: MeasurementRepository,
+        cacheManager: CacheManager
+) : DataProcessorService<SofarData>(SofarData::class, cacheManager) {
     override val vendorType = VendorType.SOFAR
+
+    private val lastMeasurementCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)
 
     private val log by Logger()
 
     override fun process(device: Device, data: SofarData) {
         val last = getLastMeasurment(device)
         if (last != null && Instant.now().minusMillis(last.timestamp.toInstant().toEpochMilli()).toEpochMilli() < 50000) {
-            log.warn("Data source for device ${device.id} tried to save new measurement too early")
+            log.trace("Data source for device ${device.id} tried to save new measurement too early")
             return
-            // TODO: revise this behavior
         }
 
         val new = if (last != null)
@@ -127,7 +128,7 @@ class SofarDataProcessorService(
     }
 
     private fun getLastMeasurment(device: Device): EnergyMeasurement? {
-        var last = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)
+        var last = lastMeasurementCache
                 .get(device.id) as EnergyMeasurement?
 
         if (last == null)
@@ -138,7 +139,7 @@ class SofarDataProcessorService(
 
     private fun saveMeasurement(device: Device, measurement: EnergyMeasurement) {
         measurementRepository.save(measurement)
-        cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS).put(device.id, measurement)
+        lastMeasurementCache.put(device.id, measurement)
     }
 
 }

@@ -22,11 +22,17 @@ class GrafanaStatsController(private val statsService: StatsService) {
     fun query(): QueryTableResponse {
 
         val table = QueryTable()
-        table.columns = listOf(TableColumn(TableColumnType.NUMBER, "power"), TableColumn(TableColumnType.STRING, "deviceName"))
+        table.columns = listOf(
+                TableColumn(TableColumnType.NUMBER, "power"),
+                TableColumn(TableColumnType.STRING, "deviceName"),
+                TableColumn(TableColumnType.NUMBER, "generationToday"),
+                TableColumn(TableColumnType.NUMBER, "inverterVoltage"),
+                TableColumn(TableColumnType.NUMBER, "inverterCurrent")
+        )
 
         val stats = statsService.getCurrentStats()
         val row = if (stats != null)
-            listOf(stats.power, stats.deviceName)
+            listOf(stats.power, stats.deviceName, stats.generationToday, stats.inverterVoltage, stats.inverterCurrent)
         else
             emptyList()
 

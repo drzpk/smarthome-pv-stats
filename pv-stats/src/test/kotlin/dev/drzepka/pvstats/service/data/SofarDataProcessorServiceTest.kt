@@ -41,5 +41,5 @@ class SofarDataProcessorServiceTest {
         Assertions.assertEquals(10000, estimation)
     }
 
-    private fun getService(): SofarDataProcessorService = SofarDataProcessorService(deviceCacheService, cacheManager, measurementRepository)
+    private fun getService(): SofarDataProcessorService = SofarDataProcessorService(deviceCacheService, measurementRepository, cacheManager)
 }

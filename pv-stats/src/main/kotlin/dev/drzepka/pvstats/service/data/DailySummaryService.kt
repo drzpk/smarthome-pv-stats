@@ -3,6 +3,7 @@ package dev.drzepka.pvstats.service.data
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
+import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.util.Logger
@@ -29,6 +30,10 @@ class DailySummaryService(
         deviceService.getActiveDevices().forEach {
             createMissingSummaries(it)
         }
+    }
+
+    fun getLastSummaryFor(device: Device): EnergyMeasurementDailySummary? {
+        return energyMeasurementDailySummaryRepository.findFirstByDeviceOrderByCreatedAtDesc(device)
     }
 
     internal fun createMissingSummaries(device: Device) {
@@ -64,7 +69,10 @@ class DailySummaryService(
         // Well, actually it will, because daily summary job will be happening at midnight
         // and at that time it's usually dark so I'll turn a blind eye here.
         val data = measurementService.getAllForDay(device, day)
-        calculateSummary(summary, data)
+        if (device.type == DeviceType.SOFAR)
+            calculateSofarSummary(summary, data) // todo: create migration script for power column and delete this special-case method
+        else
+            calculateSummary(summary, data)
         energyMeasurementDailySummaryRepository.save(summary)
     }
 
@@ -105,6 +113,27 @@ class DailySummaryService(
         summary.avgPower = if (nonZeroPowerCount > 0) (nonZeroPowerSum / nonZeroPowerCount).toFloat() else 0f
     }
 
+    internal fun calculateSofarSummary(summary: EnergyMeasurementDailySummary, data: List<EnergyMeasurement>) {
+        val previousTotalWh = getLastSummaryFor(summary.device)?.totalWh ?: 0
+        summary.totalWh = if (data.isNotEmpty()) data.last().totalWh else previousTotalWh
+        summary.deltaWh = summary.totalWh - previousTotalWh
+
+        var nonZeroPowerSum = 0.0
+        var nonZeroPowerCount = 0
+        var maxPower = 0
+
+        data.forEach {
+            if (it.powerW > 0) {
+                nonZeroPowerSum += it.powerW
+                nonZeroPowerCount++
+                maxPower = max(maxPower, it.powerW)
+            }
+        }
+
+        summary.maxPower = maxPower
+        summary.avgPower = if (nonZeroPowerCount > 0) (nonZeroPowerSum / nonZeroPowerCount).toFloat() else 0f
+    }
+
     internal fun getLastSummaryDateFor(device: Device): LocalDate? {
         val last = getLastSummaryFor(device)
         return last?.createdAt
@@ -113,9 +142,5 @@ class DailySummaryService(
     private fun getFirstMeasurementDateFor(device: Device): LocalDate? {
         val first = measurementService.getFirstForDevice(device)
         return first?.timestamp?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
-    }
-
-    private fun getLastSummaryFor(device: Device): EnergyMeasurementDailySummary? {
-        return energyMeasurementDailySummaryRepository.findFirstByDeviceOrderByCreatedAtDesc(device)
     }
 }
