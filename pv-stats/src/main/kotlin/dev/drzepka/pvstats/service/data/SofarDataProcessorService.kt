@@ -60,9 +60,22 @@ class SofarDataProcessorService(
         val measurement = EnergyMeasurement()
         measurement.timestamp = Date()
         measurement.totalWh = estimatedTotal
-        measurement.deltaWh = measurement.totalWh - last.totalWh
         measurement.powerW = data.currentPower
         measurement.deviceId = last.deviceId
+
+        measurement.deltaWh = if (previousDaily != null && previousDaily <= data.energyToday) {
+            // Accurate delta is available
+            data.energyToday - previousDaily
+        } else {
+            var d = measurement.totalWh - last.totalWh
+            if (d < 0) {
+                log.trace("DeltaWh for measurement at ${measurement.timestamp} was negative and had to be trimmed to zero")
+                d = 0
+            }
+            d
+        }
+
+        deviceDataService.set(device, DeviceDataService.Property.DAILY_PRODUCTION, data.energyToday)
         return measurement
     }
 
@@ -88,26 +101,27 @@ class SofarDataProcessorService(
         fun compareTo1kWh(left: Int, right: Int) = floor(left / 1000f).toInt() - floor(right / 1000f).toInt()
 
         val currentTotalGuessed = previousTotalGuessed + delta
-        val kWhComparison = compareTo1kWh(currentTotalGuessed, currentTotalReal)
-        when {
-            kWhComparison == 0 -> {
+        when (compareTo1kWh(currentTotalGuessed, currentTotalReal)) {
+            0 -> {
                 // Best case scenario: prediction is good enough
                 return currentTotalGuessed
             }
-            kWhComparison < 0 -> {
+            -1 -> {
                 // Guessed total production is lower than real
                 val maxExclusiveReal = currentTotalReal
                 val minExclusiveReal = maxExclusiveReal - delta
                 return minExclusiveReal + floor((maxExclusiveReal - minExclusiveReal) / 2f).toInt() + delta
             }
-            kWhComparison > 0 -> {
+            1 -> {
                 // Guessed total production is higher than real
                 val minExclusiveReal = currentTotalReal
                 val maxExclusiveReal = minExclusiveReal + 1000 - delta
                 return minExclusiveReal + floor((maxExclusiveReal - minExclusiveReal) / 2f).toInt() + delta
             }
             else -> {
-                throw IllegalStateException("impossible")
+                log.warn("Difference between previous guessed and current real total production is too big, setting " +
+                        "estimation to (inaccurate) real value")
+                return currentTotalReal
             }
         }
     }

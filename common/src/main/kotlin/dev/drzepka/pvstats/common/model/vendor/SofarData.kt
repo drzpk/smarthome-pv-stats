@@ -11,7 +11,7 @@ class SofarData(raw: Array<Byte>) : VendorData(raw) {
     val energyToday: Int
         get() = floor(getShort(TODAY_PRODUCTION, 1) * 10).toInt()
     val energyTotal: Int
-        get() = getInt(TOTAL_PRODUCTION)
+        get() = getInt(TOTAL_PRODUCTION) * 1000
     val currentPower: Int // Watt
         get() = floor(getShort(ACTIVE_POWER, 1) * 10).toInt()
     val frequency: Float

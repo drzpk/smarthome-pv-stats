@@ -34,5 +34,12 @@ class SofarDataProcessorServiceTest {
         Assertions.assertEquals(10850, estimation)
     }
 
+    @Test
+    fun `check estimation - big difference`() {
+        val service = getService()
+        val estimation = service.getEstimatedTotalProductionWh(0, 10000, 900)
+        Assertions.assertEquals(10000, estimation)
+    }
+
     private fun getService(): SofarDataProcessorService = SofarDataProcessorService(deviceCacheService, cacheManager, measurementRepository)
 }

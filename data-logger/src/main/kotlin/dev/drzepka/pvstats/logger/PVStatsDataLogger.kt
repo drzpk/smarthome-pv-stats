@@ -12,7 +12,7 @@ class PVStatsDataLogger {
 
     companion object {
 
-        const val DEBUG = true
+        const val DEBUG = false
 
         private val log by Logger()
 
@@ -45,7 +45,7 @@ class PVStatsDataLogger {
         }
 
         private fun getLoader(): PropertiesLoader {
-            return PropertiesLoader(if (DEBUG) "default.properties" else "config.properties")
+            return PropertiesLoader(if (true) "default.properties" else "config.properties")
         }
 
         private fun getInitialDelay(intervalSeconds: Int): Long {

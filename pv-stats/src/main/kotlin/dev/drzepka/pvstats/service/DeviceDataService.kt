@@ -3,7 +3,7 @@ package dev.drzepka.pvstats.service
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.DeviceData
-import dev.drzepka.pvstats.repository.DeviceDataService
+import dev.drzepka.pvstats.repository.DeviceDataRepository
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Service
 import javax.cache.CacheManager
@@ -11,7 +11,7 @@ import javax.transaction.Transactional
 
 @Service
 class DeviceDataService(
-        private val deviceDataService: DeviceDataService,
+        private val deviceDataRepository: DeviceDataRepository,
         cacheManager: CacheManager
 ) {
     private val log by Logger()
@@ -25,10 +25,10 @@ class DeviceDataService(
         var value = cache.get(key) as String?
 
         if (value == null) {
-            val entity = deviceDataService.findByDeviceIdAndProperty(device.id, key)
+            val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, key)
             value = entity?.value
             if (invalidate && entity != null)
-                deviceDataService.delete(entity)
+                deviceDataRepository.delete(entity)
         } else if (invalidate) {
             cache.remove(key)
         }
@@ -44,13 +44,13 @@ class DeviceDataService(
         val key = property.name
 
         if (cache.containsKey(key)) {
-            if (deviceDataService.replaceValue(device.id, key, value) == 0) {
+            if (deviceDataRepository.replaceValue(device.id, key, value) == 0) {
                 log.trace("Cache value for device ${device.id} and key $key didn't exist in the database but it did in the cache")
-                deviceDataService.save(createEntity(device, property, value))
+                deviceDataRepository.save(createEntity(device, property, value))
             }
         } else {
-            deviceDataService.deleteByDeviceAndProperty(device, key)
-            deviceDataService.save(createEntity(device, property, value))
+            deviceDataRepository.deleteByDeviceAndProperty(device, key)
+            deviceDataRepository.save(createEntity(device, property, value))
         }
 
         cache.put(key, value)

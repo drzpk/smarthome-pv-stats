@@ -38,7 +38,7 @@ class SofarConnectorTest {
         val parsed = service.parseSocketResponseData(getConfig(123), raw) as SofarData
 
         Assertions.assertEquals(23550, parsed.energyToday)
-        Assertions.assertEquals(64, parsed.energyTotal)
+        Assertions.assertEquals(64000, parsed.energyTotal)
         Assertions.assertEquals(2400, parsed.currentPower)
         Assertions.assertEquals(44, parsed.generationHoursTotal)
         Assertions.assertEquals(49.98f, parsed.frequency, 0.05f)
