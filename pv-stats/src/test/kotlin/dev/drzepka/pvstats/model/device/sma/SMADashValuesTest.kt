@@ -13,10 +13,18 @@ class SMADashValuesTest {
     }
 
     @Test
+    fun `check getting null power`() {
+       val power = getTestObjectNullPower().getPower()
+        then(power).isEqualTo(0)
+    }
+
+    @Test
     fun `check getting device name`() {
         val deviceName=  getTestObject().getDeviceName()
         then(deviceName).isEqualTo("STP4.0-3AV-40 752")
     }
 
     private fun getTestObject(): SMADashValues = loadTestJsonData("sma_dash_values")
+
+    private fun getTestObjectNullPower(): SMADashValues = loadTestJsonData("sma_dash_values_null_power")
 }

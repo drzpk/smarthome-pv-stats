@@ -7,7 +7,7 @@ open class SMADashValues : HashMap<String, Any>() {
 
     open fun getPower(): Int { // SI unit (Watts)
         val property = getPropertyObject(OBJECT_CURRENT_POWER)
-        return property["val"] as Int
+        return property["val"] as Int? ?: 0
     }
 
     open fun getDeviceName(): String {
