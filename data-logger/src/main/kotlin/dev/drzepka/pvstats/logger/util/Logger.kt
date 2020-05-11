@@ -1,5 +1,7 @@
 package dev.drzepka.pvstats.logger.util
 
+import dev.drzepka.pvstats.logger.PVStatsDataLogger
+import java.io.File
 import java.time.LocalDate
 import java.util.logging.FileHandler
 import java.util.logging.Logger
@@ -22,8 +24,14 @@ class Logger : ReadOnlyProperty<Any, Logger> {
         private fun getFileHandler(): FileHandler {
             if (fileHandler != null) return fileHandler!!
 
+            val logDirectory = File(PVStatsDataLogger.mainConfig.logDirectory)
+            if (!logDirectory.isDirectory)
+                throw IllegalArgumentException("Logging directory ${logDirectory.absolutePath} wasn't found")
+
             val now = LocalDate.now()
-            fileHandler = FileHandler("logs/data-logger-${now.year}-${now.month}-${now.dayOfMonth}.log")
+            val month = now.monthValue.toString().padStart(2, '0')
+            val day = now.dayOfMonth.toString().padStart(2, '0')
+            fileHandler = FileHandler("${logDirectory.absolutePath}/data-logger-${now.year}-$month-$day.log", true)
             fileHandler!!.formatter = SimpleFormatter()
             return fileHandler!!
         }

@@ -2,20 +2,18 @@ package dev.drzepka.pvstats.logger.util
 
 import java.io.File
 import java.io.FileInputStream
-import java.io.InputStream
 import java.util.*
 
-class PropertiesLoader(filename: String) {
+class PropertiesLoader {
 
     val properties = Properties()
 
     init {
-        val file = File(filename)
-        val stream: InputStream = if (!file.isFile) {
-            javaClass.classLoader.getResourceAsStream(filename)!!
-        } else {
+        val file = File("config.properties")
+        val stream = if (file.isFile)
             FileInputStream(file)
-        }
+        else
+            javaClass.classLoader.getResourceAsStream("default.properties")!!
 
         properties.load(stream)
         stream.close()

@@ -5,6 +5,8 @@ plugins {
     kotlin("jvm")
 }
 
+version = "1.0.0"
+
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 val compileKotlin: KotlinCompile by tasks
 compileKotlin.kotlinOptions {
@@ -36,4 +38,17 @@ tasks.withType<KotlinCompile> {
         freeCompilerArgs = listOf("-Xjsr305=strict")
         jvmTarget = "1.8"
     }
+}
+
+tasks.register("fatJar", type = Jar::class) {
+    manifest {
+        attributes["Main-Class"] = "dev.drzepka.pvstats.logger.PVStatsDataLogger"
+        attributes["Implementation-Version"] = project.version.toString()
+        attributes["Implementation-Title"] = "PV-Stats data logger"
+    }
+    archiveBaseName.set("pvstats-logger")
+    archiveVersion.set(project.version.toString())
+
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+    with(tasks.jar.get() as CopySpec)
 }
