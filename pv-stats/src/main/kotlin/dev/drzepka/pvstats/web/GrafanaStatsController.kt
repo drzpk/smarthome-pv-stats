@@ -15,26 +15,34 @@ class GrafanaStatsController(private val statsService: StatsService) {
 
     @PostMapping("/search")
     fun search(): SearchResponse {
-        return SearchResponse("power", "deviceName")
+        return SearchResponse("power", "deviceName", "generationToday", "inverterVoltage", "inverterCurrent")
     }
 
     @PostMapping("/query")
-    fun query(): QueryTableResponse {
+    fun query(@RequestBody request: QueryRequest): QueryTableResponse {
+        val stats = statsService.getCurrentStats()
+        val columns = if (stats != null) {
+            val requested = request.targets.map { it.target }
+            val availableMetrics = listOf(
+                    Pair(TableColumn(TableColumnType.NUMBER, "power"), stats.power),
+                    Pair(TableColumn(TableColumnType.STRING, "deviceName"), stats.deviceName),
+                    Pair(TableColumn(TableColumnType.NUMBER, "generationToday"), stats.generationToday),
+                    Pair(TableColumn(TableColumnType.NUMBER, "inverterVoltage"), stats.inverterVoltage),
+                    Pair(TableColumn(TableColumnType.NUMBER, "inverterCurrent"), stats.inverterCurrent)
+            )
+
+            requested.map {
+                val metric = availableMetrics.firstOrNull { m -> m.first.text == it }
+                metric
+            }
+        } else {
+            emptyList()
+        }
+
 
         val table = QueryTable()
-        table.columns = listOf(
-                TableColumn(TableColumnType.NUMBER, "power"),
-                TableColumn(TableColumnType.STRING, "deviceName"),
-                TableColumn(TableColumnType.NUMBER, "generationToday"),
-                TableColumn(TableColumnType.NUMBER, "inverterVoltage"),
-                TableColumn(TableColumnType.NUMBER, "inverterCurrent")
-        )
-
-        val stats = statsService.getCurrentStats()
-        val row = if (stats != null)
-            listOf(stats.power, stats.deviceName, stats.generationToday, stats.inverterVoltage, stats.inverterCurrent)
-        else
-            emptyList()
+        table.columns = columns.map { it!!.first }
+        val row = columns.map { it!!.second }
 
         table.rows = listOf(row)
         return QueryTableResponse(table)
