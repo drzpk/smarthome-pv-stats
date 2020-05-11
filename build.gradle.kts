@@ -11,5 +11,5 @@ allprojects {
 
 subprojects {
     group = "dev.drzepka"
-    version = "1.1.0"
+    version = "1.1.1"
 }
