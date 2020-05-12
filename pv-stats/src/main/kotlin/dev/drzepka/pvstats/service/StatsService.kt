@@ -50,13 +50,15 @@ class StatsService(
         return CurrentStats(dashValues.getPower(), dashValues.getDeviceName(), todayGeneration)
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun getSofarStats(device: Device): CurrentStats {
-        val sofarData = vendorDataCache[device.id] as SofarData?
-        if (sofarData == null) {
+        val rawData = vendorDataCache[device.id] as Array<Byte>?
+        if (rawData == null) {
             log.debug("No vendor data for device $device")
             return CurrentStats(0, device.name, 0)
         }
 
+        val sofarData = SofarData(rawData)
         return CurrentStats(sofarData.currentPower, "", sofarData.energyToday, sofarData.pv1Voltage, sofarData.pv1Current)
     }
 }
