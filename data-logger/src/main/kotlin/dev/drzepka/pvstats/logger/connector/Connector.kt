@@ -14,9 +14,9 @@ abstract class Connector {
 
     protected val log by Logger()
 
-    fun getData(config: SourceConfig): VendorData? {
+    fun getData(config: SourceConfig, silent: Boolean): VendorData? {
         return when (type) {
-            Type.SOCKET -> getSocketData(config)
+            Type.SOCKET -> getSocketData(config, silent)
         }
     }
 
@@ -24,7 +24,8 @@ abstract class Connector {
 
     internal open fun parseSocketResponseData(config: SourceConfig, response: Array<Byte>): VendorData = throw NotImplementedError("socket response parser isn't implemented")
 
-    private fun getSocketData(config: SourceConfig): VendorData? {
+    @Suppress("ConstantConditionIf")
+    private fun getSocketData(config: SourceConfig, silent: Boolean): VendorData? {
         if (PVStatsDataLogger.DEBUG) return getTestVendorData()
 
         val split = splitSocketUrl(config.url)
@@ -33,7 +34,8 @@ abstract class Connector {
         try {
             socket.connect(InetSocketAddress(split.first, split.second), config.timeout * 1000)
         } catch (e: SocketTimeoutException) {
-            log.warning("Connection to source ${config.sourceName} timed out (${config.url})")
+            if (!silent)
+                log.warning("Connection to source ${config.sourceName} timed out (${config.url})")
         }
 
         socket.getOutputStream().write(getSocketRequestData(config).toByteArray())
@@ -45,8 +47,9 @@ abstract class Connector {
         socket.close()
 
         if (buffer.size != 110) {
-            log.warning("Response from source ${config.sourceName} does not appear to contain inverter data. " +
-                    "Did you supplied correct SN?")
+            if (!silent)
+                log.warning("Response from source ${config.sourceName} does not appear to contain inverter data. " +
+                        "Did you supplied correct SN?")
             return null
         }
 
