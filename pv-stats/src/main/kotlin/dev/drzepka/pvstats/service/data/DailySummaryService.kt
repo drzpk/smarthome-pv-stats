@@ -1,5 +1,7 @@
 package dev.drzepka.pvstats.service.data
 
+import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
+import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
@@ -11,6 +13,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.ZoneId
+import javax.cache.CacheManager
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -18,10 +21,12 @@ import kotlin.math.max
 class DailySummaryService(
         private val deviceService: DeviceService,
         private val measurementService: MeasurementService,
-        private val energyMeasurementDailySummaryRepository: EnergyMeasurementDailySummaryRepository
+        private val energyMeasurementDailySummaryRepository: EnergyMeasurementDailySummaryRepository,
+        cacheManager: CacheManager
 ) {
 
     private val log by Logger()
+    private val vendorDataCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_VENDOR_DATA)
 
     @Synchronized
     @Scheduled(cron = "\${scheduler.daily-summary}")
@@ -70,7 +75,7 @@ class DailySummaryService(
         // and at that time it's usually dark so I'll turn a blind eye here.
         val data = measurementService.getAllForDay(device, day)
         if (device.type == DeviceType.SOFAR)
-            calculateSofarSummary(summary, data) // todo: create migration script for power column and delete this special-case method
+            calculateSofarSummary(summary, data, device) // todo: create migration script for power column and delete this special-case method
         else
             calculateSummary(summary, data)
         energyMeasurementDailySummaryRepository.save(summary)
@@ -113,10 +118,20 @@ class DailySummaryService(
         summary.avgPower = if (nonZeroPowerCount > 0) (nonZeroPowerSum / nonZeroPowerCount).toFloat() else 0f
     }
 
-    internal fun calculateSofarSummary(summary: EnergyMeasurementDailySummary, data: List<EnergyMeasurement>) {
+    @Suppress("UNCHECKED_CAST")
+    internal fun calculateSofarSummary(summary: EnergyMeasurementDailySummary, data: List<EnergyMeasurement>, device: Device) {
         val previousTotalWh = getLastSummaryFor(summary.device)?.totalWh ?: 0
         summary.totalWh = if (data.isNotEmpty()) data.last().totalWh else previousTotalWh
-        summary.deltaWh = summary.totalWh - previousTotalWh
+
+        val rawData = vendorDataCache[device.id] as Array<Byte>?
+        if (rawData != null) {
+            // Use more accurate data
+            val sofarData = SofarData(rawData)
+            summary.deltaWh = sofarData.energyToday
+        } else {
+            summary.deltaWh = summary.totalWh - previousTotalWh
+        }
+        vendorDataCache.remove(device.id)
 
         var nonZeroPowerSum = 0.0
         var nonZeroPowerCount = 0
