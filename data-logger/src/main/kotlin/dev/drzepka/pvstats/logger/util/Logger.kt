@@ -13,7 +13,8 @@ class Logger : ReadOnlyProperty<Any, Logger> {
 
     override fun getValue(thisRef: Any, property: KProperty<*>): Logger {
         val logger = Logger.getLogger(thisRef.javaClass.simpleName)
-        logger.addHandler(getFileHandler())
+        if (logger.handlers.isEmpty())
+            logger.addHandler(getFileHandler())
         return logger
     }
 

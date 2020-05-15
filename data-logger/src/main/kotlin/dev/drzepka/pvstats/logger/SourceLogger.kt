@@ -11,9 +11,11 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
+import java.util.logging.Level
 import kotlin.math.ceil
+import kotlin.system.exitProcess
 
-class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: SourceConfig) {
+class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceConfig: SourceConfig) {
 
     private val log by Logger()
     private val objectMapper = ObjectMapper()
@@ -34,6 +36,17 @@ class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: Sourc
     fun getInterval() = sourceConfig.interval
 
     fun execute() {
+        try {
+            doExecute()
+        } catch (e: Exception) {
+            log.log(Level.SEVERE, "Unexpected exception caught during execution of logger for source {${sourceConfig.sourceName}", e)
+        } catch (t: Throwable) {
+            log.log(Level.SEVERE, "Unrecoverable exception caught", t)
+            exitProcess(1)
+        }
+    }
+
+    private fun doExecute() {
         if (throttlingCountdown > 0) {
             throttlingCountdown--
             return
@@ -42,10 +55,10 @@ class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: Sourc
             throttlingCountdown = connectorThrottling
 
         val dataSent = try {
-            doExecute()
+            sendData()
         } catch (e: Exception) {
             if (connectorThrottling == 0)
-                log.severe("Error while collecting data for source ${sourceConfig.sourceName}: ${e.message}\n")
+                log.log(Level.SEVERE, "Error while collecting data for source ${sourceConfig.sourceName}", e)
             false
         }
 
@@ -53,7 +66,7 @@ class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: Sourc
             connectorErrorCount++
             if (connectorErrorCount == 3) {
                 log.warning("Inverter responded with error 3 times in a row, increasing request interval")
-                log.info("Subsequent intverter connection errors won't be logged")
+                log.info("Subsequent inverter connection errors won't be logged")
                 calculateThrottling()
             }
         } else {
@@ -67,7 +80,7 @@ class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: Sourc
         }
     }
 
-    private fun doExecute(): Boolean {
+    private fun sendData(): Boolean {
         val data = sofarConnector.getData(sourceConfig, connectorThrottling > 0) ?: return false
         sendData(data)
         return true
@@ -81,6 +94,8 @@ class SourceLogger(pvStatsConfig: PvStatsConfig, private val sourceConfig: Sourc
     private fun sendData(data: VendorData) {
         val url = URL(endpointUrl)
         val connection = url.openConnection() as HttpURLConnection
+        connection.connectTimeout = pvStatsConfig.timeout * 1000
+        connection.readTimeout = pvStatsConfig.timeout * 1000
         connection.setRequestProperty("Authorization", authorizationHeader)
         connection.requestMethod = "PUT"
         connection.doOutput = true
