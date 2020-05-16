@@ -8,6 +8,8 @@ import dev.drzepka.pvstats.logger.util.PropertiesLoader
 import java.time.LocalTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.logging.Level
+import kotlin.system.exitProcess
 
 class PVStatsDataLogger {
 
@@ -30,8 +32,12 @@ class PVStatsDataLogger {
             }
 
             val pvStatsConfig = PvStatsConfig.loadFromProperties(loader)
-
             val executorService = Executors.newScheduledThreadPool(4)
+
+            val initialDelay = LocalTime.MAX.toSecondOfDay() - LocalTime.now().toSecondOfDay() + 60
+            executorService.scheduleAtFixedRate(this::archiveLogs, initialDelay.toLong(), 24 * 60 * 60, TimeUnit.SECONDS)
+            archiveLogs()
+
             sourceNames.forEach { _ ->
                 val config = SourceConfig.loadFromProperties("name", loader)
                 val sourceExecutor = SourceLogger(pvStatsConfig, config)
@@ -52,6 +58,15 @@ class PVStatsDataLogger {
             else
                 0
             return seconds.toLong()
+        }
+
+        private fun archiveLogs() {
+            try {
+                Logger.archiveLogs()
+            } catch (t: Throwable) {
+                log.log(Level.SEVERE, "Unrecoverable error occurred while archiving logs", t)
+                exitProcess(1)
+            }
         }
     }
 }

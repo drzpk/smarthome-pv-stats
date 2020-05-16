@@ -5,7 +5,7 @@ plugins {
     kotlin("jvm")
 }
 
-version = "1.0.1"
+version = "1.0.3"
 
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 val compileKotlin: KotlinCompile by tasks
