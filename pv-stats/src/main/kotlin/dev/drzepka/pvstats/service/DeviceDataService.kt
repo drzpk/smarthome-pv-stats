@@ -6,6 +6,7 @@ import dev.drzepka.pvstats.entity.DeviceData
 import dev.drzepka.pvstats.repository.DeviceDataRepository
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Service
+import java.util.*
 import javax.cache.CacheManager
 import javax.transaction.Transactional
 
@@ -19,6 +20,9 @@ class DeviceDataService(
     private val cache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_DEVICE_DATA)
 
     fun getInt(device: Device, property: Property, invalidate: Boolean = false): Int? = getString(device, property, invalidate)?.toInt()
+
+    fun getBytes(device: Device, property: Property, invalidate: Boolean = false): ByteArray? =
+            Base64.getDecoder().decode(getString(device, property, invalidate))
 
     fun getString(device: Device, property: Property, invalidate: Boolean = false): String? {
         val key = property.name
@@ -38,6 +42,9 @@ class DeviceDataService(
 
     @Transactional(value = Transactional.TxType.REQUIRED)
     fun set(device: Device, property: Property, value: Int) = set(device, property, value.toString())
+
+    @Transactional(value = Transactional.TxType.REQUIRED)
+    fun set(device: Device, property: Property, value: ByteArray) = set(device, property, Base64.getEncoder().encodeToString(value))
 
     @Transactional(value = Transactional.TxType.REQUIRED)
     fun set(device: Device, property: Property, value: String) {
@@ -65,6 +72,7 @@ class DeviceDataService(
     }
 
     enum class Property {
-        DAILY_PRODUCTION
+        DAILY_PRODUCTION,
+        VENDOR_DATA
     }
 }

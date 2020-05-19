@@ -19,7 +19,7 @@ class SofarDataProcessorService(
         private val deviceDataService: DeviceDataService,
         private val measurementRepository: MeasurementRepository,
         cacheManager: CacheManager
-) : DataProcessorService<SofarData>(SofarData::class, cacheManager) {
+) : DataProcessorService<SofarData>(SofarData::class, deviceDataService) {
     override val vendorType = VendorType.SOFAR
 
     private val lastMeasurementCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)

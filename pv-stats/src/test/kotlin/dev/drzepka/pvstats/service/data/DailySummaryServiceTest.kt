@@ -6,18 +6,16 @@ import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
 import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
+import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.DeviceService
-import dev.drzepka.pvstats.util.MockCache
 import dev.drzepka.pvstats.util.kAny
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.mockito.Mockito
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 import java.util.*
-import javax.cache.CacheManager
 
 class DailySummaryServiceTest {
 
@@ -33,11 +31,7 @@ class DailySummaryServiceTest {
             saved
         }
     }
-    private val cacheManager = mock<CacheManager> {
-        on { getCache<Any, Any>(Mockito.anyString()) } doAnswer {
-            MockCache()
-        }
-    }
+    private val deviceDataService = mock<DeviceDataService> {}
 
     private var firstMeasurement = EnergyMeasurement()
     private var lastSummary = EnergyMeasurementDailySummary()
@@ -141,7 +135,7 @@ class DailySummaryServiceTest {
 
     private fun getDevice(): Device = Device()
 
-    private fun getService(): DailySummaryService = DailySummaryService(deviceService, measurementService, energyMeasurementDailySummaryRepository, cacheManager)
+    private fun getService(): DailySummaryService = DailySummaryService(deviceService, measurementService, energyMeasurementDailySummaryRepository, deviceDataService)
 
     private fun getSummaryEntity(): EnergyMeasurementDailySummary {
         return EnergyMeasurementDailySummary()

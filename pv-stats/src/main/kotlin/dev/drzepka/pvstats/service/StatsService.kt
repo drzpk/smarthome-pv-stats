@@ -14,17 +14,14 @@ import org.springframework.cache.annotation.Cacheable
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.net.URI
-import javax.cache.CacheManager
 
 @Service
 class StatsService(
         private val smaApiClient: SMAApiClient,
         private val measurementService: MeasurementService,
         private val dailySummaryService: DailySummaryService,
-        cacheManager: CacheManager
+        private val deviceDataService: DeviceDataService
 ) {
-
-    private val vendorDataCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_VENDOR_DATA)
 
     private val log by Logger()
 
@@ -52,13 +49,13 @@ class StatsService(
 
     @Suppress("UNCHECKED_CAST")
     private fun getSofarStats(device: Device): CurrentStats {
-        val rawData = vendorDataCache[device.id] as Array<Byte>?
+        val rawData = deviceDataService.getBytes(device, DeviceDataService.Property.VENDOR_DATA)
         if (rawData == null) {
             log.debug("No vendor data for device $device")
-            return CurrentStats(0, device.name, 0)
+            return CurrentStats(-1, device.name, -1)
         }
 
-        val sofarData = SofarData(rawData)
+        val sofarData = SofarData(rawData.toTypedArray())
         return CurrentStats(sofarData.currentPower, "", sofarData.energyToday, sofarData.pv1Voltage, sofarData.pv1Current)
     }
 }

@@ -1,19 +1,18 @@
 package dev.drzepka.pvstats.service.data
 
-import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
 import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
+import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.ZoneId
-import javax.cache.CacheManager
 import kotlin.math.floor
 import kotlin.math.max
 
@@ -22,11 +21,10 @@ class DailySummaryService(
         private val deviceService: DeviceService,
         private val measurementService: MeasurementService,
         private val energyMeasurementDailySummaryRepository: EnergyMeasurementDailySummaryRepository,
-        cacheManager: CacheManager
+        private val deviceDataService: DeviceDataService
 ) {
 
     private val log by Logger()
-    private val vendorDataCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_VENDOR_DATA)
 
     @Synchronized
     @Scheduled(cron = "\${scheduler.daily-summary}")
@@ -123,15 +121,14 @@ class DailySummaryService(
         val previousTotalWh = getLastSummaryFor(summary.device)?.totalWh ?: 0
         summary.totalWh = if (data.isNotEmpty()) data.last().totalWh else previousTotalWh
 
-        val rawData = vendorDataCache[device.id] as Array<Byte>?
+        val rawData = deviceDataService.getBytes(device, DeviceDataService.Property.VENDOR_DATA, true)
         if (rawData != null) {
             // Use more accurate data
-            val sofarData = SofarData(rawData)
+            val sofarData = SofarData(rawData.toTypedArray())
             summary.deltaWh = sofarData.energyToday
         } else {
             summary.deltaWh = summary.totalWh - previousTotalWh
         }
-        vendorDataCache.remove(device.id)
 
         var nonZeroPowerSum = 0.0
         var nonZeroPowerCount = 0
