@@ -1,12 +1,13 @@
 package dev.drzepka.pvstats.common.model.vendor
 
+import java.util.*
 import kotlin.math.floor
 
 /**
  * Response format source: official Sofar datasheet
  */
 @Suppress("unused")
-class SofarData(raw: Array<Byte>) : VendorData(raw) {
+class SofarData(val raw: Array<Byte>) : VendorData() {
 
     val energyToday: Int
         get() = floor(getShort(TODAY_PRODUCTION, 1) * 10).toInt()
@@ -57,7 +58,15 @@ class SofarData(raw: Array<Byte>) : VendorData(raw) {
                     .or(raw[offset + 2].toInt().and(0xff).shl(8))
                     .or(raw[offset + 3].toInt().and(0xff))
 
+    override fun serialize(): Any = Base64.getEncoder().encodeToString(raw.toByteArray())
+
     companion object Offsets {
+        fun deserialize(data: Any): SofarData {
+            assert(data is String) { "Unknown data type: ${data::class.java.simpleName}" }
+            val raw = Base64.getDecoder().decode(data as String)
+            return SofarData(raw.toTypedArray())
+        }
+
         // Basic info
         private const val OPERATING_STATE = 1
         private const val FAULT_1 = 3

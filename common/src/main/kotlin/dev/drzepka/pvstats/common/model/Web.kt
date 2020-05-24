@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.common.model
 
-import dev.drzepka.pvstats.common.model.vendor.VendorType
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 
 class PutDataRequest {
-    var type: VendorType? = null
-    var data = "" // Base64
+    var type: DeviceType? = null
+    var data: Any? = null
 }

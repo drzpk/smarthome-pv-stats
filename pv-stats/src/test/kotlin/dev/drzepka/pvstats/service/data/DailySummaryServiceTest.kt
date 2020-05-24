@@ -21,7 +21,7 @@ class DailySummaryServiceTest {
 
     private val deviceService = mock<DeviceService> {}
     private val measurementService = mock<MeasurementService> {
-        on { getFirstForDevice(kAny()) } doAnswer { firstMeasurement }
+        on { getFirstMeasurement(kAny()) } doAnswer { firstMeasurement }
     }
     private val energyMeasurementDailySummaryRepository = mock<EnergyMeasurementDailySummaryRepository> {
         on { findFirstByDeviceOrderByCreatedAtDesc(kAny()) } doAnswer { lastSummary }

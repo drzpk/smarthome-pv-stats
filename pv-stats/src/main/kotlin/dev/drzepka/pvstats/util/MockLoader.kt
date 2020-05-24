@@ -1,7 +1,7 @@
 package dev.drzepka.pvstats.util
 
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.DeviceRepository
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component

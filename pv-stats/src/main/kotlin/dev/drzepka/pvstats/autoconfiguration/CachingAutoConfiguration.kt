@@ -46,12 +46,7 @@ class CachingAutoConfiguration {
     }
 
     private fun getCaches(): Map<String, CacheConfiguration<Any, Any>> {
-        val smaCurrentStatsConfig = CacheConfigurationBuilder
-                .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(10))
-                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(6)))
-                .build()
-
-        val lastMeasurementCache = CacheConfigurationBuilder
+       val lastMeasurementCache = CacheConfigurationBuilder
                 .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(10))
                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10)))
                 .build()
@@ -62,7 +57,6 @@ class CachingAutoConfiguration {
                 .build()
 
         return mapOf(
-                Pair(CACHE_SMA_CURRENT_STATS, smaCurrentStatsConfig),
                 Pair(CACHE_LAST_MEASUREMENTS, lastMeasurementCache),
                 Pair(CACHE_DEVICE_DATA, deviceDataCache)
         )
@@ -71,7 +65,6 @@ class CachingAutoConfiguration {
     private fun ehCacheCachingProvider(): EhcacheCachingProvider = Caching.getCachingProvider() as EhcacheCachingProvider
 
     companion object {
-        const val CACHE_SMA_CURRENT_STATS = "smaCurrentStats"
         const val CACHE_LAST_MEASUREMENTS = "lastMeasurements"
         const val CACHE_DEVICE_DATA = "deviceData"
         const val KEY_GENERATOR_DEVICE_ID = "deviceIdKeyGenerator"

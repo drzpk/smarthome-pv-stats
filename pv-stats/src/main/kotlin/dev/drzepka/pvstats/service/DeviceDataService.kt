@@ -21,8 +21,10 @@ class DeviceDataService(
 
     fun getInt(device: Device, property: Property, invalidate: Boolean = false): Int? = getString(device, property, invalidate)?.toInt()
 
-    fun getBytes(device: Device, property: Property, invalidate: Boolean = false): ByteArray? =
-            Base64.getDecoder().decode(getString(device, property, invalidate))
+    fun getBytes(device: Device, property: Property, invalidate: Boolean = false): ByteArray? {
+        val str = getString(device, property, invalidate)
+        return if (str != null) Base64.getDecoder().decode(str) else null
+    }
 
     fun getString(device: Device, property: Property, invalidate: Boolean = false): String? {
         val key = property.name
@@ -73,6 +75,7 @@ class DeviceDataService(
 
     enum class Property {
         DAILY_PRODUCTION,
+        POWER,
         VENDOR_DATA
     }
 }

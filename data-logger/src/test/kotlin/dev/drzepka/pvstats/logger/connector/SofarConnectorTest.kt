@@ -1,7 +1,8 @@
 package dev.drzepka.pvstats.logger.connector
 
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SofarData
-import dev.drzepka.pvstats.common.model.vendor.VendorType
+import dev.drzepka.pvstats.logger.connector.base.SocketConnector
 import dev.drzepka.pvstats.logger.model.config.SourceConfig
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -13,7 +14,7 @@ class SofarConnectorTest {
     fun `check generating socket request data`() {
         val connector = SofarConnector()
         val data = connector.getSocketRequestData(getConfig(1629384756))
-        val expected = Connector.hexStringToBytes("a517001045000034701e6102000000000000000000000000000001030000002705d09115")
+        val expected = SocketConnector.hexStringToBytes("a517001045000034701e6102000000000000000000000000000001030000002705d09115")
         Assertions.assertArrayEquals(expected, data)
     }
 
@@ -30,7 +31,7 @@ class SofarConnectorTest {
             L3    P:  0.82   V: 238.7   I: 3.43   F: 49.98
          */
 
-        val raw = Connector.hexStringToBytes("a5610010150072f3a0386602018e8002009c2400006232b4" +
+        val raw = SocketConnector.hexStringToBytes("a5610010150072f3a0386602018e8002009c2400006232b4" +
                 "5e01034e0002000000000000000000000f22027d0317000100f7000000f00041138609890158096901580953015700" +
                 "0000400000002c093302800026003219e00f18031d003c000000010000054d087206cdccad0315")
 
@@ -59,5 +60,5 @@ class SofarConnectorTest {
 
     }
 
-    private fun getConfig(sn: Int): SourceConfig = SourceConfig("name", VendorType.SOFAR, "localhost", sn, 3, 60)
+    private fun getConfig(sn: Int): SourceConfig = SourceConfig("name", DeviceType.SOFAR, "localhost", sn, 3, 60, null)
 }

@@ -1,33 +1,41 @@
 package dev.drzepka.pvstats.service.data
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.VendorData
-import dev.drzepka.pvstats.common.model.vendor.VendorType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.DataSourceUserDetails
-import dev.drzepka.pvstats.service.DeviceDataService
+import dev.drzepka.pvstats.util.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
-import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.full.primaryConstructor
 
-abstract class DataProcessorService<T : VendorData>(
-        private val clazz: KClass<T>,
-        private val deviceDataService: DeviceDataService
-) {
-    abstract val vendorType: VendorType
+abstract class DataProcessorService<T : VendorData> {
+    abstract val deviceType: DeviceType
+
+    private val log by Logger()
 
     private lateinit var objectMapper: ObjectMapper
 
-    fun process(dataBase64: String) {
+    fun process(deviceType: DeviceType, data: Any) {
+        if (deviceType == DeviceType.GENERIC)
+            throw IllegalArgumentException("Cannot use generic device for data logging")
+
         val userDetails = SecurityContextHolder.getContext().authentication.principal as DataSourceUserDetails
         val device = userDetails.dataSource.device!!
 
-        val decoded = Base64.getDecoder().decode(dataBase64)
-        val instance = clazz.primaryConstructor!!.call(decoded.toTypedArray())
-        deviceDataService.set(device, DeviceDataService.Property.VENDOR_DATA, decoded)
-        process(device, instance)
+        if (deviceType != device.type)
+            throw IllegalArgumentException("Device type from request ($deviceType) doesn't match device type of authenticated user (${device.type})")
+
+        val deserialized = try {
+            deserialize(data)
+        } catch (e: Exception) {
+            log.error("Data deserialization for device $device failed", e)
+            if (log.isTraceEnabled)
+                log.trace("Serialized data: $data")
+            throw e
+        }
+
+        process(device, deserialized)
     }
 
     @Autowired
@@ -35,5 +43,7 @@ abstract class DataProcessorService<T : VendorData>(
         this.objectMapper = objectMapper
     }
 
-    protected abstract fun process(device: Device, data: T)
+    abstract fun process(device: Device, data: T)
+
+    protected abstract fun deserialize(data: Any): T
 }

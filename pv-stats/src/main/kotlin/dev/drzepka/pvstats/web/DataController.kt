@@ -26,13 +26,18 @@ class DataController(private val dataServices: List<DataProcessorService<out Ven
             return ResponseEntity.badRequest().build()
         }
 
-        val service = dataServices.firstOrNull { it.vendorType == request.type!! }
+        if (request.data == null) {
+            log.warn("No data provided for data endpoint")
+            return ResponseEntity.badRequest().build()
+        }
+
+        val service = dataServices.firstOrNull { it.deviceType == request.type!! }
         if (service == null) {
             log.warn("No service found for vendor type ${request.type!!}")
             return ResponseEntity.notFound().build()
         }
 
-        service.process(request.data)
+        service.process(request.type!!, request.data!!)
         return ResponseEntity.created(URI.create("localhost")).body(null)
     }
 }

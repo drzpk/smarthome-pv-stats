@@ -10,7 +10,6 @@ spring:
     open-in-view: false
 
 scheduler:
-  measurement-collection: 0 0/5 * * * *
   daily-summary: 0 1 0 * * *
 
 terminal:

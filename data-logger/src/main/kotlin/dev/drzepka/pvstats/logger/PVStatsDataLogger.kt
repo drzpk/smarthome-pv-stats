@@ -38,15 +38,18 @@ class PVStatsDataLogger {
             executorService.scheduleAtFixedRate(this::archiveLogs, initialDelay.toLong(), 24 * 60 * 60, TimeUnit.SECONDS)
             archiveLogs()
 
-            sourceNames.forEach { _ ->
+            sourceNames.map {
                 val config = SourceConfig.loadFromProperties("name", loader)
-                val sourceExecutor = SourceLogger(pvStatsConfig, config)
-                executorService.scheduleAtFixedRate(
-                        sourceExecutor::execute,
-                        getInitialDelay(sourceExecutor.getInterval()),
-                        sourceExecutor.getInterval().toLong(),
-                        TimeUnit.SECONDS
-                )
+                SourceLogger(pvStatsConfig, config)
+            }.forEach { logger ->
+                logger.getIntervals().forEach { interval ->
+                    executorService.scheduleAtFixedRate(
+                            { logger.execute(interval.key) },
+                            getInitialDelay(interval.value),
+                            interval.value.toLong(),
+                            TimeUnit.SECONDS
+                    )
+                }
             }
 
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)

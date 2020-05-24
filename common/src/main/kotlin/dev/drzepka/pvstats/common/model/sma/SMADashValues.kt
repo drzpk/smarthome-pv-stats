@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.model.device.sma
+package dev.drzepka.pvstats.common.model.sma
 
 import org.omg.CORBA.Object
 

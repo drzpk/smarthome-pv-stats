@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.service
 
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.ApplicationException
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.util.Logger
 import dev.drzepka.pvstats.util.ValidationUtils
@@ -73,7 +73,7 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
         }
     }
 
-    fun getDeviceTypes(): List<DeviceType> = DeviceType.values().asList().minus(DeviceType.UNKNOWN)
+    fun getDeviceTypes(): List<DeviceType> = DeviceType.values().asList().minus(DeviceType.GENERIC)
 
     private fun validateName(value: String?, required: Boolean) =
             ValidationUtils.length("name", value, required, minLength = 1, maxLength = 128)

@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.service.data
 
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SofarData
-import dev.drzepka.pvstats.common.model.vendor.VendorType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
@@ -19,14 +19,16 @@ class SofarDataProcessorService(
         private val deviceDataService: DeviceDataService,
         private val measurementRepository: MeasurementRepository,
         cacheManager: CacheManager
-) : DataProcessorService<SofarData>(SofarData::class, deviceDataService) {
-    override val vendorType = VendorType.SOFAR
+) : DataProcessorService<SofarData>() {
+    override val deviceType = DeviceType.SOFAR
 
     private val lastMeasurementCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)
 
     private val log by Logger()
 
     override fun process(device: Device, data: SofarData) {
+        deviceDataService.set(device, DeviceDataService.Property.VENDOR_DATA, data.raw.toByteArray())
+
         val last = getLastMeasurment(device)
         if (last != null && Instant.now().minusMillis(last.timestamp.toInstant().toEpochMilli()).toEpochMilli() < 50000) {
             log.trace("Data source for device ${device.id} tried to save new measurement too early")
@@ -40,6 +42,8 @@ class SofarDataProcessorService(
 
         saveMeasurement(device, new)
     }
+
+    override fun deserialize(data: Any): SofarData = SofarData.deserialize(data)
 
     private fun createWithPriorMeasurement(device: Device, last: EnergyMeasurement, data: SofarData): EnergyMeasurement {
         val previousDaily = deviceDataService.getInt(device, DeviceDataService.Property.DAILY_PRODUCTION)

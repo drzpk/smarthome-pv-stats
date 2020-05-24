@@ -3,9 +3,9 @@ package dev.drzepka.pvstats.service
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import com.nhaarman.mockitokotlin2.verify
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.ApplicationException
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.DeviceRepository
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

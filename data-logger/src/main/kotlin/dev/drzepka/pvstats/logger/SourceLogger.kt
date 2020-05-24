@@ -2,8 +2,12 @@ package dev.drzepka.pvstats.logger
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.drzepka.pvstats.common.model.PutDataRequest
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.VendorData
+import dev.drzepka.pvstats.logger.connector.SMAConnector
 import dev.drzepka.pvstats.logger.connector.SofarConnector
+import dev.drzepka.pvstats.logger.connector.base.Connector
+import dev.drzepka.pvstats.logger.connector.base.DataType
 import dev.drzepka.pvstats.logger.model.config.PvStatsConfig
 import dev.drzepka.pvstats.logger.model.config.SourceConfig
 import dev.drzepka.pvstats.logger.util.Logger
@@ -12,7 +16,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.*
 import java.util.logging.Level
-import kotlin.math.ceil
+import kotlin.math.floor
 import kotlin.system.exitProcess
 
 class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceConfig: SourceConfig) {
@@ -20,9 +24,11 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
     private val log by Logger()
     private val objectMapper = ObjectMapper()
 
-    private val sofarConnector = SofarConnector()
+    private val connector = getConnector(sourceConfig)
+    private val connectorThrottling: Int
+
+    private var throttle = false
     private var connectorErrorCount = 0
-    private var connectorThrottling = 0
     private var throttlingCountdown = 0
 
     private val endpointUrl: String = pvStatsConfig.url.toString() + "/api/data"
@@ -31,13 +37,28 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
     init {
         val authData = pvStatsConfig.user + ":" + pvStatsConfig.password
         authorizationHeader = "Basic " + Base64.getEncoder().encodeToString(authData.toByteArray())
+
+        val throttledInterval = 2 * 60 // seconds
+        // Consecutive error responses will cause connector to throttle fetch request frequency.
+        // Throttling is meant to be used for requests with high frequency (more frequent than throttledInterval),
+        // those with lower frequency won't be throttled at all
+        val minInterval = getIntervals().map { it.value }.min()!!
+        connectorThrottling = floor(throttledInterval.toFloat() / minInterval).toInt()
     }
 
-    fun getInterval() = sourceConfig.interval
+    fun getIntervals(): Map<DataType, Int> = connector.supportedDataTypes.map {
+        val interval = when (it) {
+            DataType.METRICS -> sourceConfig.metricsInterval
+            DataType.MEASUREMENT -> sourceConfig.measurementInterval
+        } ?: throw IllegalArgumentException("interval of type $it" +
+                " is required by device ${sourceConfig.type} but is missing")
 
-    fun execute() {
+        Pair(it, interval)
+    }.toMap()
+
+    fun execute(dataType: DataType) {
         try {
-            doExecute()
+            doExecute(dataType)
         } catch (e: Exception) {
             log.log(Level.SEVERE, "Unexpected exception caught during execution of logger for source {${sourceConfig.sourceName}", e)
         } catch (t: Throwable) {
@@ -46,18 +67,29 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
         }
     }
 
-    private fun doExecute() {
+    private fun getConnector(sourceConfig: SourceConfig): Connector {
+        val connector = when (sourceConfig.type) {
+            DeviceType.SMA -> SMAConnector()
+            DeviceType.SOFAR -> SofarConnector()
+            DeviceType.GENERIC -> throw IllegalStateException("Generic device type is not meant to be used as a source")
+        }
+
+        connector.initialize(sourceConfig)
+        return connector
+    }
+
+    private fun doExecute(dataType: DataType) {
         if (throttlingCountdown > 0) {
             throttlingCountdown--
             return
         }
-        if (throttlingCountdown == 0 && connectorThrottling > 0)
+        if (throttlingCountdown == 0 && throttle)
             throttlingCountdown = connectorThrottling
 
         val dataSent = try {
-            sendData()
+            sendData(dataType)
         } catch (e: Exception) {
-            if (connectorThrottling == 0)
+            if (!throttle)
                 log.log(Level.SEVERE, "Error while collecting data for source ${sourceConfig.sourceName}", e)
             false
         }
@@ -67,12 +99,13 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
             if (connectorErrorCount == 3) {
                 log.warning("Inverter responded with error 3 times in a row, increasing request interval")
                 log.info("Subsequent inverter connection errors won't be logged")
-                calculateThrottling()
+                throttle = true
+                throttlingCountdown = connectorThrottling
             }
         } else {
             if (connectorErrorCount > 2) {
                 log.info("Inverter responded normally after $connectorErrorCount errors, restoring normal request interval")
-                connectorThrottling = 0
+                throttle = false
                 throttlingCountdown = 0
             }
 
@@ -80,15 +113,10 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
         }
     }
 
-    private fun sendData(): Boolean {
-        val data = sofarConnector.getData(sourceConfig, connectorThrottling > 0) ?: return false
+    private fun sendData(dataType: DataType): Boolean {
+        val data = connector.getData(sourceConfig, dataType, throttlingCountdown > 0) ?: return false
         sendData(data)
         return true
-    }
-
-    private fun calculateThrottling() {
-        connectorThrottling = ceil(120f / getInterval()).toInt()
-        throttlingCountdown = connectorThrottling
     }
 
     private fun sendData(data: VendorData) {
@@ -112,7 +140,7 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
     private fun prepareRequest(data: VendorData): String {
         val request = PutDataRequest()
         request.type = sourceConfig.type
-        request.data = Base64.getEncoder().encodeToString(data.raw.toByteArray())
+        request.data = data.serialize()
         return objectMapper.writeValueAsString(request)
     }
 }

@@ -6,8 +6,6 @@ import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
-import dev.drzepka.pvstats.service.ConnectorFactory
-import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.util.kAny
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -27,8 +25,6 @@ class MeasurementServiceTest {
     private var findForDateRangeFrom: Date? = null
     private var findForDateRangeTo: Date? = null
 
-    private val deviceService = mock<DeviceService> {}
-    private val connectorFactory = mock<ConnectorFactory> {}
     private val measurementRepository = mock<MeasurementRepository> {
         on { findForDateRange(Mockito.anyInt(), kAny(), kAny()) } doAnswer {
             findForDateRangeFrom = it.arguments[1] as Date
@@ -94,7 +90,7 @@ class MeasurementServiceTest {
         Assertions.assertEquals(0, savedMeasurements.size)
     }
 
-    private fun getService(): MeasurementService = MeasurementService(deviceService, connectorFactory, measurementRepository)
+    private fun getService(): MeasurementService = MeasurementService(measurementRepository)
 
     private fun getDevice(): Device = Device()
 

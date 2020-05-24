@@ -1,14 +1,18 @@
-package dev.drzepka.pvstats.web.client.sma
+package dev.drzepka.pvstats.mock
 
+import dev.drzepka.pvstats.common.model.PutDataRequest
+import dev.drzepka.pvstats.common.model.sma.Entry
+import dev.drzepka.pvstats.common.model.sma.SMADashValues
+import dev.drzepka.pvstats.common.model.sma.SMADeviceData
+import dev.drzepka.pvstats.common.model.sma.SMAMeasurement
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
+import dev.drzepka.pvstats.common.model.vendor.SMAData
 import dev.drzepka.pvstats.entity.EnergyMeasurement
-import dev.drzepka.pvstats.model.device.sma.Entry
-import dev.drzepka.pvstats.model.device.sma.SMADashValues
-import dev.drzepka.pvstats.model.device.sma.SMADeviceData
-import dev.drzepka.pvstats.model.device.sma.SMAMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
+import dev.drzepka.pvstats.web.DataController
 import org.springframework.context.annotation.Profile
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
-import java.net.URI
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -20,11 +24,25 @@ import kotlin.random.Random
 
 @Component
 @Profile("mock")
-class SMAMockClient(private val measurementRepository: MeasurementRepository) : SMAApiClient {
+class SMAMockLogger(
+        private val measurementRepository: MeasurementRepository,
+        private val dataController: DataController
+) {
 
     private val random = Random.Default
 
-    override fun getDashLogger(uri: URI): SMAMeasurement {
+    @Scheduled(cron = "0 0/1 * * * *")
+    fun logData() {
+        val data = SMAData(getMeasurement(), getDashValues())
+
+        val request = PutDataRequest()
+        request.type = DeviceType.SMA
+        request.data = data.serialize()
+
+        dataController.putData(request)
+    }
+
+    private fun getMeasurement(): SMAMeasurement {
         val now = LocalDateTime.now()
 
         val lastMeasurement = getLastMeasurement()
@@ -51,7 +69,7 @@ class SMAMockClient(private val measurementRepository: MeasurementRepository) : 
         return createData(entries)
     }
 
-    override fun getDashValues(uri: URI): SMADashValues {
+    private fun getDashValues(): SMADashValues {
         return object : SMADashValues() {
             override fun getPower(): Int = Random.Default.nextInt(500, 3000)
             override fun getDeviceName(): String = "Test SMA device"

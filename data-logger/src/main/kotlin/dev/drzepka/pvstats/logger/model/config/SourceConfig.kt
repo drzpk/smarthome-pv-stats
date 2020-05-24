@@ -1,26 +1,28 @@
 package dev.drzepka.pvstats.logger.model.config
 
-import dev.drzepka.pvstats.common.model.vendor.VendorType
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.logger.util.PropertiesLoader
 
 class SourceConfig internal constructor(
         val sourceName: String,
-        val type: VendorType,
+        val type: DeviceType,
         val url: String,
-        val sn: Int,
+        val sn: Int?,
         val timeout: Int,
-        val interval: Int
+        val metricsInterval: Int?,
+        val measurementInterval: Int?
 ) {
 
     companion object {
         fun loadFromProperties(sourceName: String, loader: PropertiesLoader): SourceConfig {
             return SourceConfig(
                     sourceName,
-                    VendorType.valueOf(loader.getString("source.$sourceName.type", true)!!),
+                    DeviceType.valueOf(loader.getString("source.$sourceName.type", true)!!),
                     loader.getString("source.$sourceName.url", true)!!,
-                    loader.getInt("source.$sourceName.sn", true)!!,
+                    loader.getInt("source.$sourceName.sn", false),
                     loader.getInt("source.$sourceName.timeout", true)!!,
-                    loader.getInt("source.$sourceName.interval", true)!!
+                    loader.getInt("source.$sourceName.metrics_interval", false),
+                    loader.getInt("source.$sourceName.measurement_interval", false)
             )
         }
 

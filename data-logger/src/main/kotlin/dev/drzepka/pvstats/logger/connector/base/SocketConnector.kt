@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.logger.connector
+package dev.drzepka.pvstats.logger.connector.base
 
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.model.vendor.VendorData
@@ -9,23 +9,14 @@ import java.net.InetSocketAddress
 import java.net.Socket
 import java.net.SocketTimeoutException
 
-abstract class Connector {
-    abstract val type: Type
+abstract class SocketConnector : Connector {
 
-    protected val log by Logger()
+    private val log by Logger()
 
-    fun getData(config: SourceConfig, silent: Boolean): VendorData? {
-        return when (type) {
-            Type.SOCKET -> getSocketData(config, silent)
-        }
-    }
-
-    internal open fun getSocketRequestData(config: SourceConfig): Array<Byte> = throw NotImplementedError("socket request data isn't implemented")
-
-    internal open fun parseSocketResponseData(config: SourceConfig, response: Array<Byte>): VendorData = throw NotImplementedError("socket response parser isn't implemented")
+    override fun initialize(config: SourceConfig) = Unit
 
     @Suppress("ConstantConditionIf")
-    private fun getSocketData(config: SourceConfig, silent: Boolean): VendorData? {
+    final override fun getData(config: SourceConfig, dataType: DataType, silent: Boolean): VendorData? {
         if (PVStatsDataLogger.DEBUG) return getTestVendorData()
 
         val split = splitSocketUrl(config.url)
@@ -69,6 +60,10 @@ abstract class Connector {
         return parseSocketResponseData(config, byteArray)
     }
 
+    abstract fun getSocketRequestData(config: SourceConfig): Array<Byte>
+
+    abstract fun parseSocketResponseData(config: SourceConfig, response: Array<Byte>): VendorData
+
     private fun splitSocketUrl(url: String): Pair<String, Int> {
         val split = url.split(":")
         if (split.size != 2) throw IllegalArgumentException("Malformed url")
@@ -81,10 +76,6 @@ abstract class Connector {
                 "0000400000002c093302800026003219e00f18031d003c000000010000054d087206cdccad0315")
 
         return SofarData(bytes.copyOfRange(27, bytes.size))
-    }
-
-    enum class Type {
-        SOCKET
     }
 
     companion object {

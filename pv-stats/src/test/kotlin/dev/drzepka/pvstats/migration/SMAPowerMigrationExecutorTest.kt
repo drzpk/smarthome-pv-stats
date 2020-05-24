@@ -3,9 +3,9 @@ package dev.drzepka.pvstats.migration
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.util.kAny

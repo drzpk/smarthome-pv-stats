@@ -1,10 +1,10 @@
 package dev.drzepka.pvstats.service.data
 
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.DeviceService
@@ -152,7 +152,7 @@ class DailySummaryService(
     }
 
     private fun getFirstMeasurementDateFor(device: Device): LocalDate? {
-        val first = measurementService.getFirstForDevice(device)
+        val first = measurementService.getFirstMeasurement(device)
         return first?.timestamp?.toInstant()?.atZone(ZoneId.systemDefault())?.toLocalDate()
     }
 }

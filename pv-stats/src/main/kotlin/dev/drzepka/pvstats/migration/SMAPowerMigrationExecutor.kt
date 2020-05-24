@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.migration
 
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
-import dev.drzepka.pvstats.model.DeviceType
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.util.Logger

@@ -8,7 +8,6 @@ spring:
 #        format_sql: true
 
 scheduler:
-  measurement-collection: 0/15 * * * * *
   daily-summary: 0 0/5 * * * *
 
 terminal:

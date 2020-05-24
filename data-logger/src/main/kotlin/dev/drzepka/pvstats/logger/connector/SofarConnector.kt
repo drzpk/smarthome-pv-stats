@@ -2,17 +2,19 @@ package dev.drzepka.pvstats.logger.connector
 
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.model.vendor.VendorData
+import dev.drzepka.pvstats.logger.connector.base.DataType
+import dev.drzepka.pvstats.logger.connector.base.SocketConnector
 import dev.drzepka.pvstats.logger.model.config.SourceConfig
 
 /**
  * Request message source: https://github.com/mcikosos/Inverter-Data-Logger
  */
-class SofarConnector : Connector() {
-    override val type = Type.SOCKET
+class SofarConnector : SocketConnector() {
+    override val supportedDataTypes = listOf(DataType.METRICS)
 
     override fun getSocketRequestData(config: SourceConfig): Array<Byte> {
         val snLittleEndian = hexStringToBytes(
-                config.sn.toString(16).padStart(8, '0').chunked(2).reversed().joinToString(separator = ""))
+                config.sn!!.toString(16).padStart(8, '0').chunked(2).reversed().joinToString(separator = ""))
         val bytes = ArrayList<Byte>(36)
         bytes.addAll(HEADER)
         bytes.addAll(snLittleEndian)
@@ -30,6 +32,8 @@ class SofarConnector : Connector() {
     override fun parseSocketResponseData(config: SourceConfig, response: Array<Byte>): VendorData {
         return SofarData(response.copyOfRange(27, response.size))
     }
+
+    override fun getUrl(config: SourceConfig, dataType: DataType): String = config.url
 
     companion object {
         private val HEADER = hexStringToBytes("a5170010450000")

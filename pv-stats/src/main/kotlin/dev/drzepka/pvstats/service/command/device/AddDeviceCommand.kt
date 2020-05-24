@@ -1,6 +1,6 @@
 package dev.drzepka.pvstats.service.command.device
 
-import dev.drzepka.pvstats.model.DeviceType
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.service.command.Argument
 import dev.drzepka.pvstats.service.command.Command
