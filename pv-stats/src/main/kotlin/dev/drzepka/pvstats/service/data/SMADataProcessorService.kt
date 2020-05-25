@@ -63,7 +63,7 @@ class SMADataProcessorService(
         measurements.add(createMeasurement(lastMeasurement, entries[startFrom], device))
 
         for (i in startFrom + 1 until entries.size) {
-            val newMeasurement = createMeasurement(measurements[i - 1], entries[i], device)
+            val newMeasurement = createMeasurement(measurements[i - startFrom - 1], entries[i], device)
             newMeasurement.deviceId = device.id
             measurements.add(newMeasurement)
         }
