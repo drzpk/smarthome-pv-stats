@@ -60,5 +60,5 @@ class SofarConnectorTest {
 
     }
 
-    private fun getConfig(sn: Int): SourceConfig = SourceConfig("name", DeviceType.SOFAR, "localhost", sn, 3, 60, null)
+    private fun getConfig(sn: Int): SourceConfig = SourceConfig("name", DeviceType.SOFAR, "localhost", "user", "password", sn, 3, 60, null)
 }

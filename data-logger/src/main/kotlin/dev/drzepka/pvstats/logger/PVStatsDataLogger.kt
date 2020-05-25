@@ -5,6 +5,7 @@ import dev.drzepka.pvstats.logger.model.config.PvStatsConfig
 import dev.drzepka.pvstats.logger.model.config.SourceConfig
 import dev.drzepka.pvstats.logger.util.Logger
 import dev.drzepka.pvstats.logger.util.PropertiesLoader
+import dev.drzepka.pvstats.logger.util.roundAndGetDelay
 import java.time.LocalTime
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -40,7 +41,7 @@ class PVStatsDataLogger {
                 logger.getIntervals().forEach { interval ->
                     executorService.scheduleAtFixedRate(
                             { logger.execute(interval.key) },
-                            getInitialDelay(interval.value),
+                            roundAndGetDelay(interval.value).toLong(),
                             interval.value.toLong(),
                             TimeUnit.SECONDS
                     )
@@ -63,14 +64,6 @@ class PVStatsDataLogger {
                     exitProcess(1)
                 }
             }
-        }
-
-        private fun getInitialDelay(intervalSeconds: Int): Long {
-            val seconds = if (intervalSeconds.rem(5) == 0)
-                intervalSeconds - LocalTime.now().second.rem(5)
-            else
-                0
-            return seconds.toLong()
         }
 
         private fun archiveLogs() {
