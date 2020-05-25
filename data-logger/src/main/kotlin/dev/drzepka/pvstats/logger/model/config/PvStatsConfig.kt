@@ -5,8 +5,6 @@ import java.net.URI
 
 class PvStatsConfig private constructor(
         val url: URI,
-        val user: String,
-        val password: String,
         val timeout: Int
 ) {
 
@@ -14,8 +12,6 @@ class PvStatsConfig private constructor(
         fun loadFromProperties(loader: PropertiesLoader): PvStatsConfig {
             return PvStatsConfig(
                     URI.create(loader.getString("pvstats.url", true)!!),
-                    loader.getString("pvstats.user")!!,
-                    loader.getString("pvstats.password")!!,
                     loader.getInt("pvstats.timeout")!!
             )
         }

@@ -24,24 +24,19 @@ class PVStatsDataLogger {
         @JvmStatic
         fun main(args: Array<String>) {
             log.info("Loading configuration")
+            archiveLogs()
 
-            val sourceNames = SourceConfig.getAvailableNames(loader)
-            if (sourceNames.isEmpty()) {
+            val sourceLoggers = getSourceLoggers()
+            if (sourceLoggers.isEmpty()) {
                 log.info("No sources were found in configuration file, exiting")
                 return
             }
 
-            val pvStatsConfig = PvStatsConfig.loadFromProperties(loader)
             val executorService = Executors.newScheduledThreadPool(4)
-
             val initialDelay = LocalTime.MAX.toSecondOfDay() - LocalTime.now().toSecondOfDay() + 60
             executorService.scheduleAtFixedRate(this::archiveLogs, initialDelay.toLong(), 24 * 60 * 60, TimeUnit.SECONDS)
-            archiveLogs()
 
-            sourceNames.map {
-                val config = SourceConfig.loadFromProperties("name", loader)
-                SourceLogger(pvStatsConfig, config)
-            }.forEach { logger ->
+            sourceLoggers.forEach { logger ->
                 logger.getIntervals().forEach { interval ->
                     executorService.scheduleAtFixedRate(
                             { logger.execute(interval.key) },
@@ -53,6 +48,21 @@ class PVStatsDataLogger {
             }
 
             executorService.awaitTermination(Long.MAX_VALUE, TimeUnit.SECONDS)
+        }
+
+        private fun getSourceLoggers(): List<SourceLogger> {
+            val pvStatsConfig = PvStatsConfig.loadFromProperties(loader)
+            val sourceNames = SourceConfig.getAvailableNames(loader)
+
+            return sourceNames.map {
+                val config = SourceConfig.loadFromProperties(it, loader)
+                try {
+                    SourceLogger(pvStatsConfig, config)
+                } catch (e: Exception) {
+                    log.log(Level.SEVERE, "Error while initializing logger ${config.name}", e)
+                    exitProcess(1)
+                }
+            }
         }
 
         private fun getInitialDelay(intervalSeconds: Int): Long {

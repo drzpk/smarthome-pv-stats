@@ -4,9 +4,11 @@ import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.logger.util.PropertiesLoader
 
 class SourceConfig internal constructor(
-        val sourceName: String,
+        val name: String,
         val type: DeviceType,
         val url: String,
+        val user: String,
+        val password: String,
         val sn: Int?,
         val timeout: Int,
         val metricsInterval: Int?,
@@ -19,6 +21,8 @@ class SourceConfig internal constructor(
                     sourceName,
                     DeviceType.valueOf(loader.getString("source.$sourceName.type", true)!!),
                     loader.getString("source.$sourceName.url", true)!!,
+                    loader.getString("source.$sourceName.user", true)!!,
+                    loader.getString("source.$sourceName.password", true)!!,
                     loader.getInt("source.$sourceName.sn", false),
                     loader.getInt("source.$sourceName.timeout", true)!!,
                     loader.getInt("source.$sourceName.metrics_interval", false),

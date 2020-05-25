@@ -35,7 +35,7 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
     private val authorizationHeader: String
 
     init {
-        val authData = pvStatsConfig.user + ":" + pvStatsConfig.password
+        val authData = sourceConfig.user + ":" + sourceConfig.password
         authorizationHeader = "Basic " + Base64.getEncoder().encodeToString(authData.toByteArray())
 
         val throttledInterval = 2 * 60 // seconds
@@ -60,7 +60,7 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
         try {
             doExecute(dataType)
         } catch (e: Exception) {
-            log.log(Level.SEVERE, "Unexpected exception caught during execution of logger for source {${sourceConfig.sourceName}", e)
+            log.log(Level.SEVERE, "Unexpected exception caught during execution of logger for source {${sourceConfig.name}", e)
         } catch (t: Throwable) {
             log.log(Level.SEVERE, "Unrecoverable exception caught", t)
             exitProcess(1)
@@ -90,7 +90,7 @@ class SourceLogger(private val pvStatsConfig: PvStatsConfig, private val sourceC
             sendData(dataType)
         } catch (e: Exception) {
             if (!throttle)
-                log.log(Level.SEVERE, "Error while collecting data for source ${sourceConfig.sourceName}", e)
+                log.log(Level.SEVERE, "Error while collecting data for source ${sourceConfig.name}", e)
             false
         }
 
