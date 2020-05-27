@@ -1,152 +1,89 @@
 package dev.drzepka.pvstats.service.data
 
 import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
+import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
 import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
-import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.DeviceService
+import dev.drzepka.pvstats.service.data.summary.Summary
+import dev.drzepka.pvstats.service.data.summary.SummaryProcessor
 import dev.drzepka.pvstats.util.kAny
-import org.junit.jupiter.api.Assertions
+import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
-import java.time.ZoneId
 import java.util.*
 
 class DailySummaryServiceTest {
 
-    private val deviceService = mock<DeviceService> {}
+    private val deviceService = mock<DeviceService> {
+        on { getActiveDevices() } doReturn listOf(Device())
+    }
     private val measurementService = mock<MeasurementService> {
+        on { getAllForDay(kAny(), kAny()) } doReturn emptyList()
         on { getFirstMeasurement(kAny()) } doAnswer { firstMeasurement }
     }
     private val energyMeasurementDailySummaryRepository = mock<EnergyMeasurementDailySummaryRepository> {
         on { findFirstByDeviceOrderByCreatedAtDesc(kAny()) } doAnswer { lastSummary }
-        on { save(kAny()) } doAnswer {
-            val saved = it.arguments[0] as EnergyMeasurementDailySummary
-            savedSummaries.add(saved)
-            saved
-        }
     }
-    private val deviceDataService = mock<DeviceDataService> {}
-
-    private var firstMeasurement = EnergyMeasurement()
-    private var lastSummary = EnergyMeasurementDailySummary()
-    private var savedSummaries = ArrayList<EnergyMeasurementDailySummary>()
-
-    @Test
-    fun `check creating single summary`() {
-        val service = getService()
-        lastSummary.createdAt = LocalDate.now().minusDays(2)
-
-        service.createMissingSummaries(getDevice())
-
-        Assertions.assertEquals(1, savedSummaries.size)
-        Assertions.assertEquals(LocalDate.now().minusDays(1), savedSummaries[0].createdAt)
+    private val handlerResolverService = mock<HandlerResolverService> {
+        on { summary(kAny()) } doReturn MockProcessor()
     }
 
+    // Input
+    private var firstMeasurement: EnergyMeasurement? = null
+    private var lastSummary: EnergyMeasurementDailySummary? = null
+
+    // Output
+    private val calculatedForDays = ArrayList<LocalDate>()
+
     @Test
-    fun `check creating multiple summaries`() {
+    fun `check creating first summary`() {
         val service = getService()
-        lastSummary.createdAt = LocalDate.now().minusDays(4)
+        firstMeasurement = EnergyMeasurement()
+        firstMeasurement?.timestamp = Date.from(Instant.now().minus(Duration.ofDays(3)))
 
-        service.createMissingSummaries(getDevice())
+        service.createSummary()
 
-        Assertions.assertEquals(3, savedSummaries.size)
-        Assertions.assertEquals(LocalDate.now().minusDays(3), savedSummaries[0].createdAt)
-        Assertions.assertEquals(LocalDate.now().minusDays(2), savedSummaries[1].createdAt)
-        Assertions.assertEquals(LocalDate.now().minusDays(1), savedSummaries[2].createdAt)
+        then(calculatedForDays).hasSize(3)
+        then(calculatedForDays[0]).isEqualTo(LocalDate.now().minusDays(3))
+        then(calculatedForDays[1]).isEqualTo(LocalDate.now().minusDays(2))
+        then(calculatedForDays[2]).isEqualTo(LocalDate.now().minusDays(1))
+    }
+
+    @Test
+    fun `check creating single summary for yesterday`() {
+        val service = getService()
+        lastSummary = EnergyMeasurementDailySummary()
+        lastSummary?.createdAt = LocalDate.now().minusDays(2)
+
+        service.createSummary()
+
+        then(calculatedForDays).hasSize(1)
+        then(calculatedForDays[0]).isEqualTo(LocalDate.now().minusDays(1))
     }
 
     @Test
     fun `check not creating summary - missing data`() {
         val service = getService()
 
-        service.createMissingSummaries(getDevice())
+        service.createSummary()
 
-        Assertions.assertEquals(0, savedSummaries.size)
+        then(calculatedForDays).isEmpty()
     }
 
-    @Test
-    fun `check calculation for day`() {
-        val service = getService()
-        val now = LocalTime.now()
-        val data = listOf(
-                getMeasurement(now.minusMinutes(5), 100, 100),
-                getMeasurement(now, 200, 100),
-                getMeasurement(now.plusMinutes(5), 300, 100)
-        )
+    private fun getService(): DailySummaryService = DailySummaryService(deviceService, measurementService, energyMeasurementDailySummaryRepository, handlerResolverService)
 
-        val summary = getSummaryEntity()
-        service.calculateSummary(summary, data)
+    private inner class MockProcessor : SummaryProcessor() {
+        override val deviceType = DeviceType.GENERIC
 
-        Assertions.assertEquals(300, summary.totalWh)
-        Assertions.assertEquals(300, summary.deltaWh)
-        Assertions.assertEquals(1200f, summary.avgPower, 0.5f)
-        Assertions.assertEquals(1200, summary.maxPower)
+        override fun calculateSummary(previous: Summary?, current: Summary, data: List<EnergyMeasurement>) {
+            calculatedForDays.add(current.createdAt)
+        }
     }
-
-    @Test
-    fun `check calculation for day - no data`() {
-        val service = getService()
-        val data = emptyList<EnergyMeasurement>()
-
-        val summary = getSummaryEntity()
-        service.calculateSummary(summary, data)
-
-        Assertions.assertEquals(0, summary.totalWh)
-        Assertions.assertEquals(0, summary.deltaWh)
-        Assertions.assertEquals(0f, summary.avgPower)
-        Assertions.assertEquals(0, summary.maxPower)
-    }
-
-    @Test
-    fun `check calculation for day - single record`() {
-        val service = getService()
-        val data = listOf(getMeasurement(LocalTime.now(), 100, 50))
-
-        val summary = getSummaryEntity()
-        service.calculateSummary(summary, data)
-
-        Assertions.assertEquals(100, summary.totalWh)
-        Assertions.assertEquals(100, summary.deltaWh)
-        Assertions.assertEquals(0f, summary.avgPower)
-        Assertions.assertEquals(0, summary.maxPower)
-    }
-
-    @Test
-    fun `check calculation for day - no time difference`() {
-        val service = getService()
-        val now = LocalTime.now()
-        val data = listOf(
-                getMeasurement(now, 100, 50),
-                getMeasurement(now, 200, 50)
-        )
-
-        val summary = getSummaryEntity()
-        service.calculateSummary(summary, data)
-
-        Assertions.assertEquals(0f, summary.avgPower)
-        Assertions.assertEquals(0, summary.maxPower)
-    }
-
-    private fun getDevice(): Device = Device()
-
-    private fun getService(): DailySummaryService = DailySummaryService(deviceService, measurementService, energyMeasurementDailySummaryRepository, deviceDataService)
-
-    private fun getSummaryEntity(): EnergyMeasurementDailySummary {
-        return EnergyMeasurementDailySummary()
-    }
-
-    private fun getMeasurement(time: LocalTime, totalWh: Int, deltaWh: Int): EnergyMeasurement {
-        val measurement = EnergyMeasurement()
-        measurement.timestamp = Date.from(LocalDateTime.now().with(time).atZone(ZoneId.systemDefault()).toInstant())
-        measurement.totalWh = totalWh
-        measurement.deltaWh = deltaWh
-        return measurement
-    }
-
 }

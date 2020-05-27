@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.service.data
+package dev.drzepka.pvstats.service.data.measurement
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
@@ -9,7 +9,7 @@ import dev.drzepka.pvstats.util.Logger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 
-abstract class DataProcessorService<T : VendorData> {
+abstract class MeasurementProcessor<T : VendorData> {
     abstract val deviceType: DeviceType
 
     private val log by Logger()

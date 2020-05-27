@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.service.data
+package dev.drzepka.pvstats.service.data.measurement
 
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
@@ -8,18 +8,18 @@ import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.util.Logger
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import java.time.Instant
 import java.util.*
 import javax.cache.CacheManager
 import kotlin.math.floor
 
-@Service
-class SofarDataProcessorService(
+@Component
+class SofarMeasurementProcessor(
         private val deviceDataService: DeviceDataService,
         private val measurementRepository: MeasurementRepository,
         cacheManager: CacheManager
-) : DataProcessorService<SofarData>() {
+) : MeasurementProcessor<SofarData>() {
     override val deviceType = DeviceType.SOFAR
 
     private val lastMeasurementCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)

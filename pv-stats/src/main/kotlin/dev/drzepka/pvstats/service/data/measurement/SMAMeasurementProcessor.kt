@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.service.data
+package dev.drzepka.pvstats.service.data.measurement
 
 import dev.drzepka.pvstats.common.model.sma.Entry
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
@@ -6,15 +6,16 @@ import dev.drzepka.pvstats.common.model.vendor.SMAData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
+import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 import kotlin.math.floor
 
-@Service
-class SMADataProcessorService(
+@Component
+class SMAMeasurementProcessor(
         private val measurementService: MeasurementService,
         private val deviceDataService: DeviceDataService
-) : DataProcessorService<SMAData>() {
+) : MeasurementProcessor<SMAData>() {
     override val deviceType = DeviceType.SMA
 
     private val log by Logger()
@@ -83,7 +84,13 @@ class SMADataProcessorService(
         val deltaTime = (second.t.time - first.timestamp.time) / 3_600_000f
         if (deltaTime <= 0f)
             throw IllegalStateException("Delta time for device $device isn't positive")
-        measurement.powerW = floor(measurement.deltaWh / deltaTime + 0.5f).toInt()
+        var power = measurement.deltaWh / deltaTime
+        if (power.isNaN() || power.isInfinite()) {
+            log.warn("Power calculation based energy measurement record ${first.id} is invalid; " +
+                    "power = $power, deltaWh = ${measurement.deltaWh}; deltaTime = $deltaTime")
+            power = 0f
+        }
+        measurement.powerW = floor(power + 0.5f).toInt()
 
         return measurement
     }

@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.service.data
+package dev.drzepka.pvstats.service.data.measurement
 
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
@@ -9,6 +9,7 @@ import dev.drzepka.pvstats.common.model.vendor.SMAData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
+import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.kAny
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
@@ -16,7 +17,7 @@ import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.*
 
-class SMADataProcessorServiceTest {
+class SMAMeasurementProcessorTest {
 
     @Suppress("UNCHECKED_CAST")
     private val measurementService = mock<MeasurementService> {
@@ -40,7 +41,7 @@ class SMADataProcessorServiceTest {
         measurement.timestamp = Date.from(Instant.now().minus(1, ChronoUnit.DAYS))
         storedMeasurements.add(measurement)
 
-        val processor = SMADataProcessorService(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3) // one pre-existing plus two new
@@ -69,7 +70,7 @@ class SMADataProcessorServiceTest {
         val entry2 = Entry(Date.from(now), 200)
         val entries = listOf(entry1, entry2)
 
-        val processor = SMADataProcessorService(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3)
@@ -94,7 +95,7 @@ class SMADataProcessorServiceTest {
         val entry2 = Entry(Date.from(now), 200)
         val entries = listOf(entry1, entry2)
 
-        val processor = SMADataProcessorService(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3)

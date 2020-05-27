@@ -1,8 +1,7 @@
 package dev.drzepka.pvstats.web
 
 import dev.drzepka.pvstats.common.model.PutDataRequest
-import dev.drzepka.pvstats.common.model.vendor.VendorData
-import dev.drzepka.pvstats.service.data.DataProcessorService
+import dev.drzepka.pvstats.service.data.HandlerResolverService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PutMapping
@@ -13,7 +12,7 @@ import java.net.URI
 
 @RestController
 @RequestMapping("/api/data")
-class DataController(private val dataServices: List<DataProcessorService<out VendorData>>) {
+class DataController(private val handlerResolverService: HandlerResolverService) {
 
     private val log by Logger()
 
@@ -31,7 +30,7 @@ class DataController(private val dataServices: List<DataProcessorService<out Ven
             return ResponseEntity.badRequest().build()
         }
 
-        val service = dataServices.firstOrNull { it.deviceType == request.type!! }
+        val service = handlerResolverService.measurement(request.type!!)
         if (service == null) {
             log.warn("No service found for vendor type ${request.type!!}")
             return ResponseEntity.notFound().build()

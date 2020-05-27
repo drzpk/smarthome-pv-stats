@@ -1,4 +1,4 @@
-package dev.drzepka.pvstats.service.data
+package dev.drzepka.pvstats.service.data.measurement
 
 import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.repository.MeasurementRepository
@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import javax.cache.CacheManager
 
-class SofarDataProcessorServiceTest {
+class SofarMeasurementProcessorTest {
 
     private val deviceCacheService = mock<DeviceDataService> {}
     private val cacheManager = mock<CacheManager> {}
@@ -41,5 +41,5 @@ class SofarDataProcessorServiceTest {
         Assertions.assertEquals(10000, estimation)
     }
 
-    private fun getService(): SofarDataProcessorService = SofarDataProcessorService(deviceCacheService, measurementRepository, cacheManager)
+    private fun getService(): SofarMeasurementProcessor = SofarMeasurementProcessor(deviceCacheService, measurementRepository, cacheManager)
 }
