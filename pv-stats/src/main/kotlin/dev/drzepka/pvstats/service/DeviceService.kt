@@ -29,16 +29,14 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
 
     fun getActiveDevices(): List<Device> = deviceRepository.findByActive(true)
 
-    fun addDevice(name: String, description: String, type: DeviceType, apiUrl: String): Device {
+    fun addDevice(name: String, description: String, type: DeviceType): Device {
         validateName(name, true)
         validateDescription(description, true)
-        validateUrl(apiUrl, true)
 
         val device = Device()
         device.name = name
         device.description = description
         device.type = type
-        device.apiUrl = apiUrl
         return deviceRepository.save(device)
     }
 
@@ -49,7 +47,6 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
 
         validateName(name, false)
         validateDescription(description, false)
-        validateUrl(apiUrl, false)
 
         var modified = false
         if (name != null) {
@@ -58,10 +55,6 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
         }
         if (description != null) {
             device.description = description
-            modified = true
-        }
-        if (apiUrl != null) {
-            device.apiUrl = apiUrl
             modified = true
         }
 
@@ -80,9 +73,4 @@ class DeviceService(private val deviceRepository: DeviceRepository) {
 
     private fun validateDescription(value: String?, required: Boolean) =
             ValidationUtils.length("description", value, required, minLength = 1, maxLength = 255)
-
-    private fun validateUrl(value: String?, required: Boolean) {
-        ValidationUtils.length("api url", value, required, minLength = 1, maxLength = 128)
-        ValidationUtils.url("api url", value)
-    }
 }

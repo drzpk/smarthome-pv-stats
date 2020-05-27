@@ -1,0 +1,1 @@
+alter table device drop column api_url;

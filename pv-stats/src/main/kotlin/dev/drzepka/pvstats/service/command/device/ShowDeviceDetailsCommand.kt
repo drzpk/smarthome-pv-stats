@@ -27,7 +27,6 @@ class ShowDeviceDetailsCommand(private val deviceService: DeviceService) : Comma
         printer.appendRow("Description", device.description ?: "")
         printer.appendRow("Type", device.type.toString())
         printer.appendRow("Created at", Commons.DATE_FORMAT.format(device.createdAt))
-        printer.appendRow("API URL", device.apiUrl)
         printer.appendRow("Active", device.active)
 
         return printer.print()

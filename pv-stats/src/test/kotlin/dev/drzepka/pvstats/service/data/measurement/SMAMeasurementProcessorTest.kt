@@ -117,7 +117,6 @@ class SMAMeasurementProcessorTest {
     private fun getDevice(): Device {
         val device = Device()
         device.name = "test device"
-        device.apiUrl = "http://localhost"
         return device
     }
 

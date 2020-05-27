@@ -24,22 +24,18 @@ class DeviceServiceTest {
         val service = getService()
 
         Assertions.assertThrows(ApplicationException::class.java) {
-            service.addDevice("", "name is empty", DeviceType.SMA, "http://api.url")
+            service.addDevice("", "name is empty", DeviceType.SMA)
         }
 
         Assertions.assertThrows(ApplicationException::class.java) {
-            service.addDevice("description too long".repeat(50), "asdf", DeviceType.SMA, "http://api.url")
-        }
-
-        Assertions.assertThrows(ApplicationException::class.java) {
-            service.addDevice("invalid url", "desc", DeviceType.SMA, "xyz")
+            service.addDevice("description too long".repeat(50), "asdf", DeviceType.SMA)
         }
     }
 
     @Test
     fun `check saving entity`() {
         val service = getService()
-        service.addDevice("name", "description", DeviceType.SMA, "http://localhost")
+        service.addDevice("name", "description", DeviceType.SMA)
         verify(deviceRepository, Mockito.times(1)).save(Mockito.any())
     }
 

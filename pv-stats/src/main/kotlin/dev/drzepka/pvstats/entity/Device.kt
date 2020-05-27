@@ -17,7 +17,5 @@ class Device {
     var createdAt = Date()
     var active: Boolean = true
 
-    var apiUrl: String = ""
-
     override fun toString(): String ="Device(id=$id, name=$name, type=$type, active=$active)"
 }
