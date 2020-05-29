@@ -2,6 +2,7 @@ package dev.drzepka.pvstats.logger.connector
 
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.model.vendor.VendorData
+import dev.drzepka.pvstats.common.util.hexStringToBytes
 import dev.drzepka.pvstats.logger.connector.base.DataType
 import dev.drzepka.pvstats.logger.connector.base.SocketConnector
 import dev.drzepka.pvstats.logger.model.config.SourceConfig

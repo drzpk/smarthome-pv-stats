@@ -3,13 +3,17 @@ package dev.drzepka.pvstats.service.data.measurement
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SofarData
+import dev.drzepka.pvstats.common.util.toLocalDate
+import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
+import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Component
 import java.time.Instant
+import java.time.LocalDate
 import java.util.*
 import javax.cache.CacheManager
 import kotlin.math.floor
@@ -18,6 +22,7 @@ import kotlin.math.floor
 class SofarMeasurementProcessor(
         private val deviceDataService: DeviceDataService,
         private val measurementRepository: MeasurementRepository,
+        private val measurementConfig: MeasurementConfig,
         cacheManager: CacheManager
 ) : MeasurementProcessor<SofarData>() {
     override val deviceType = DeviceType.SOFAR
@@ -46,10 +51,15 @@ class SofarMeasurementProcessor(
     override fun deserialize(data: Any): SofarData = SofarData.deserialize(data)
 
     private fun createWithPriorMeasurement(device: Device, last: EnergyMeasurement, data: SofarData): EnergyMeasurement {
-        val previousDaily = deviceDataService.getInt(device, DeviceDataService.Property.DAILY_PRODUCTION)
-        val estimatedTotal = if (previousDaily != null && previousDaily <= data.energyToday) {
+        var previousDaily = deviceDataService.getInt(device, DeviceDataService.Property.DAILY_PRODUCTION)
+        if (previousDaily?.instant?.toLocalDate()?.isBefore(LocalDate.now()) == true) {
+            log.info("Daily production wasn't set today and will be ignored")
+            previousDaily = null
+        }
+
+        val estimatedTotal = if (previousDaily != null && previousDaily.value <= data.energyToday) {
             // Normal case
-            getEstimatedTotalProductionWh(last.totalWh, data.energyTotal, data.energyToday - previousDaily)
+            getEstimatedTotalProductionWh(last.totalWh, data.energyTotal, data.energyToday - previousDaily.value)
         } else if (previousDaily != null) {
             if (data.currentPower > 0) {
                 log.warn("Data source for device ${device.id} is generating power, but inverter has switched to the next day")
@@ -67,21 +77,32 @@ class SofarMeasurementProcessor(
         measurement.totalWh = estimatedTotal
         measurement.powerW = data.currentPower
         measurement.deviceId = last.deviceId
+        calculateDeltaWh(previousDaily, data, last, measurement)
 
-        measurement.deltaWh = if (previousDaily != null && previousDaily <= data.energyToday) {
+        deviceDataService.set(device, DeviceDataService.Property.DAILY_PRODUCTION, data.energyToday)
+        return measurement
+    }
+
+    private fun calculateDeltaWh(previousDaily: InstantValue<Int>?, data: SofarData, last: EnergyMeasurement, current: EnergyMeasurement) {
+        val timeDiff = floor((current.timestamp.time - last.timestamp.time) / 1000f + 0.5f).toInt()
+        if (timeDiff > measurementConfig.maxAllowedIntervalSeconds) {
+            log.info("Interval between last and current measurement for device ${current.deviceId} is too big, " +
+                    "DeltaWh will be set to zero. ($timeDiff > ${measurementConfig.maxAllowedIntervalSeconds})")
+            current.deltaWh = 0
+            return
+        }
+
+        current.deltaWh = if (previousDaily != null && previousDaily.value <= data.energyToday) {
             // Accurate delta is available
-            data.energyToday - previousDaily
+            data.energyToday - previousDaily.value
         } else {
-            var d = measurement.totalWh - last.totalWh
+            var d = current.totalWh - last.totalWh
             if (d < 0) {
-                log.trace("DeltaWh for measurement at ${measurement.timestamp} was negative and had to be trimmed to zero")
+                log.trace("DeltaWh for measurement at ${current.timestamp} was negative and had to be trimmed to zero")
                 d = 0
             }
             d
         }
-
-        deviceDataService.set(device, DeviceDataService.Property.DAILY_PRODUCTION, data.energyToday)
-        return measurement
     }
 
     private fun createsWithoutPriorMeasurement(device: Device, data: SofarData): EnergyMeasurement {
@@ -132,8 +153,7 @@ class SofarMeasurementProcessor(
     }
 
     private fun getLastMeasurment(device: Device): EnergyMeasurement? {
-        var last = lastMeasurementCache
-                .get(device.id) as EnergyMeasurement?
+        var last = lastMeasurementCache?.get(device.id) as EnergyMeasurement?
 
         if (last == null)
             last = measurementRepository.findLast(device.id)
@@ -143,7 +163,7 @@ class SofarMeasurementProcessor(
 
     private fun saveMeasurement(device: Device, measurement: EnergyMeasurement) {
         measurementRepository.save(measurement)
-        lastMeasurementCache.put(device.id, measurement)
+        lastMeasurementCache?.put(device.id, measurement)
     }
 
 }

@@ -3,13 +3,16 @@ package dev.drzepka.pvstats.service
 import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.DeviceData
+import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.repository.DeviceDataRepository
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Service
+import java.time.Instant
 import java.util.*
 import javax.cache.CacheManager
 import javax.transaction.Transactional
 
+// todo: unused variables removal mechanism
 @Service
 class DeviceDataService(
         private val deviceDataRepository: DeviceDataRepository,
@@ -19,20 +22,24 @@ class DeviceDataService(
 
     private val cache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_DEVICE_DATA)
 
-    fun getInt(device: Device, property: Property, invalidate: Boolean = false): Int? = getString(device, property, invalidate)?.toInt()
-
-    fun getBytes(device: Device, property: Property, invalidate: Boolean = false): ByteArray? {
+    fun getInt(device: Device, property: Property, invalidate: Boolean = false): InstantValue<Int>? {
         val str = getString(device, property, invalidate)
-        return if (str != null) Base64.getDecoder().decode(str) else null
+        return if (str != null) InstantValue(str.value.toInt(), str.instant) else null
     }
 
-    fun getString(device: Device, property: Property, invalidate: Boolean = false): String? {
+    fun getBytes(device: Device, property: Property, invalidate: Boolean = false): InstantValue<ByteArray>? {
+        val str = getString(device, property, invalidate)
+        return if (str != null) InstantValue(Base64.getDecoder().decode(str.value), str.instant) else null
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun getString(device: Device, property: Property, invalidate: Boolean = false): InstantValue<String>? {
         val key = property.name
-        var value = cache.get(key) as String?
+        var value = cache.get(key) as InstantValue<String>?
 
         if (value == null) {
             val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, key)
-            value = entity?.value
+            value = if (entity != null) InstantValue(entity.value, entity.updatedAt.toInstant()) else null
             if (invalidate && entity != null)
                 deviceDataRepository.delete(entity)
         } else if (invalidate) {
@@ -62,7 +69,7 @@ class DeviceDataService(
             deviceDataRepository.save(createEntity(device, property, value))
         }
 
-        cache.put(key, value)
+        cache.put(key, InstantValue(value, Instant.now()))
     }
 
     private fun createEntity(device: Device, property: Property, value: String): DeviceData {

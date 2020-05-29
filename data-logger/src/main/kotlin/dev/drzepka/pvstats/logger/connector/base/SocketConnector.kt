@@ -2,6 +2,7 @@ package dev.drzepka.pvstats.logger.connector.base
 
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.model.vendor.VendorData
+import dev.drzepka.pvstats.common.util.hexStringToBytes
 import dev.drzepka.pvstats.logger.PVStatsDataLogger
 import dev.drzepka.pvstats.logger.model.config.SourceConfig
 import dev.drzepka.pvstats.logger.util.Logger
@@ -80,18 +81,6 @@ abstract class SocketConnector : Connector {
 
     companion object {
         private const val SOCKET_RESPONSE_SLEEP_TIME = 100L
-        private const val HEX_CHARS = "0123456789abcdef"
-
-        @JvmStatic
-        fun hexStringToBytes(str: String): Array<Byte> {
-            val bytes = Array<Byte>(str.length / 2) { 0 }
-            for (i in str.indices step 2) {
-                val upper = HEX_CHARS.indexOf(str[i].toLowerCase())
-                val lower = HEX_CHARS.indexOf(str[i + 1].toLowerCase())
-                bytes[i.shr(1)] = upper.shl(4).or(lower).toByte()
-            }
-
-            return bytes
-        }
+        
     }
 }

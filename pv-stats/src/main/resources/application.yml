@@ -19,6 +19,9 @@ terminal:
       roles:
         - ROLE_ADMIN
 
+measurement:
+  max-allowed-interval-seconds: 3600 # seconds
+
 feign:
   httpclient:
     disable-ssl-validation: true
