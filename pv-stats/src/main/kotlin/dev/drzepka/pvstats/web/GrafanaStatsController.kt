@@ -41,8 +41,8 @@ class GrafanaStatsController(private val statsService: StatsService) {
 
 
         val table = QueryTable()
-        table.columns = columns.map { it!!.first }
-        val row = columns.map { it!!.second }
+        table.columns = columns.mapNotNull { it?.first }
+        val row = columns.mapNotNull { it?.second }
 
         table.rows = listOf(row)
         return QueryTableResponse(table)
