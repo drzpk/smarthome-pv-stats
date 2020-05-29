@@ -3,6 +3,7 @@ package dev.drzepka.pvstats.service.data.measurement
 import dev.drzepka.pvstats.common.model.sma.Entry
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SMAData
+import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
@@ -14,7 +15,8 @@ import kotlin.math.floor
 @Component
 class SMAMeasurementProcessor(
         private val measurementService: MeasurementService,
-        private val deviceDataService: DeviceDataService
+        private val deviceDataService: DeviceDataService,
+        private val measurementConfig: MeasurementConfig
 ) : MeasurementProcessor<SMAData>() {
     override val deviceType = DeviceType.SMA
 
@@ -78,16 +80,22 @@ class SMAMeasurementProcessor(
         val measurement = EnergyMeasurement()
         measurement.timestamp = second.t
         measurement.totalWh = second.v ?: first.totalWh
-        measurement.deltaWh = measurement.totalWh - first.totalWh
         measurement.deviceId = device.id
 
-        val deltaTime = (second.t.time - first.timestamp.time) / 3_600_000f
-        if (deltaTime <= 0f)
+        val deltaHours = (second.t.time - first.timestamp.time) / 3_600_000f
+        if (deltaHours <= 0f)
             throw IllegalStateException("Delta time for device $device isn't positive")
-        var power = measurement.deltaWh / deltaTime
+
+        val deltaSeconds = floor((second.t.time - first.timestamp.time) / 1_000f + 0.5f).toInt()
+        measurement.deltaWh = if (deltaSeconds < measurementConfig.maxAllowedIntervalSeconds)
+            measurement.totalWh - first.totalWh
+        else
+            0
+
+        var power = measurement.deltaWh / deltaHours
         if (power.isNaN() || power.isInfinite()) {
             log.warn("Power calculation based energy measurement record ${first.id} is invalid; " +
-                    "power = $power, deltaWh = ${measurement.deltaWh}; deltaTime = $deltaTime")
+                    "power = $power, deltaWh = ${measurement.deltaWh}; deltaHours = $deltaHours")
             power = 0f
         }
         measurement.powerW = floor(power + 0.5f).toInt()

@@ -6,6 +6,7 @@ import dev.drzepka.pvstats.common.model.sma.Entry
 import dev.drzepka.pvstats.common.model.sma.SMADeviceData
 import dev.drzepka.pvstats.common.model.sma.SMAMeasurement
 import dev.drzepka.pvstats.common.model.vendor.SMAData
+import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
@@ -41,7 +42,7 @@ class SMAMeasurementProcessorTest {
         measurement.timestamp = Date.from(Instant.now().minus(1, ChronoUnit.DAYS))
         storedMeasurements.add(measurement)
 
-        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService, MeasurementConfig())
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3) // one pre-existing plus two new
@@ -70,7 +71,7 @@ class SMAMeasurementProcessorTest {
         val entry2 = Entry(Date.from(now), 200)
         val entries = listOf(entry1, entry2)
 
-        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService, MeasurementConfig())
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3)
@@ -95,13 +96,33 @@ class SMAMeasurementProcessorTest {
         val entry2 = Entry(Date.from(now), 200)
         val entries = listOf(entry1, entry2)
 
-        val processor = SMAMeasurementProcessor(measurementService, deviceDataService)
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService, MeasurementConfig())
         processor.process(getDevice(), getSMAData(entries))
 
         then(storedMeasurements).hasSize(3)
         then(storedMeasurements[0].timestamp).isEqualTo(existing1.timestamp)
         then(storedMeasurements[1].timestamp).isEqualTo(existing2.timestamp)
         then(storedMeasurements[2].timestamp).isEqualTo(entry2.t)
+    }
+
+    @Test
+    fun `check if deltaWh is set to 0 if interval between records is too large`() {
+        val measurementConfig = MeasurementConfig()
+        measurementConfig.maxAllowedIntervalSeconds = 300
+        storedMeasurements.add(EnergyMeasurement().apply {
+            totalWh = 100
+            timestamp = Date.from(Instant.now().minusSeconds(301))
+        })
+
+        val entries = listOf(
+                Entry(Date(), 200)
+        )
+
+        val processor = SMAMeasurementProcessor(measurementService, deviceDataService, measurementConfig)
+        processor.process(getDevice(), getSMAData(entries))
+
+        then(storedMeasurements).hasSize(2)
+        then(storedMeasurements[1].deltaWh).isZero()
     }
 
     private fun getSMAData(entries: List<Entry>): SMAData {
