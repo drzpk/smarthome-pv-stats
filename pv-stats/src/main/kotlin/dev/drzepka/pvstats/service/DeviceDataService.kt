@@ -34,7 +34,7 @@ class DeviceDataService(
 
     @Suppress("UNCHECKED_CAST")
     fun getString(device: Device, property: Property, invalidate: Boolean = false): InstantValue<String>? {
-        val key = property.name
+        val key = getCacheKey(device, property)
         var value = cache.get(key) as InstantValue<String>?
 
         if (value == null) {
@@ -57,7 +57,7 @@ class DeviceDataService(
 
     @Transactional(value = Transactional.TxType.REQUIRED)
     fun set(device: Device, property: Property, value: String) {
-        val key = property.name
+        val key = getCacheKey(device, property)
 
         if (cache.containsKey(key)) {
             if (deviceDataRepository.replaceValue(device.id, key, value) == 0) {
@@ -71,6 +71,8 @@ class DeviceDataService(
 
         cache.put(key, InstantValue(value, Instant.now()))
     }
+
+    private fun getCacheKey(device: Device, property: Property): String = device.id.toString() + "_" + property.name
 
     private fun createEntity(device: Device, property: Property, value: String): DeviceData {
         val entity = DeviceData()
