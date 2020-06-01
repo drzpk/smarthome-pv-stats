@@ -59,28 +59,26 @@ class DeviceDataService(
     fun set(device: Device, property: Property, value: String) {
         val key = getCacheKey(device, property)
 
-        if (cache.containsKey(key)) {
-            if (deviceDataRepository.replaceValue(device.id, key, value) == 0) {
-                log.trace("Cache value for device ${device.id} and key $key didn't exist in the database but it did in the cache")
-                deviceDataRepository.save(createEntity(device, property, value))
+        var entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, property.name)
+        val wasNull = entity == null
+        if (entity == null) {
+            log.debug("Device proparty ${property.name} for device $device didn't exist, creating")
+            entity = DeviceData().apply {
+                this.device = device
+                this.property = property.name
             }
-        } else {
-            deviceDataRepository.deleteByDeviceAndProperty(device, key)
-            deviceDataRepository.save(createEntity(device, property, value))
+        }
+
+        entity.value = value
+        if (wasNull) {
+            // If wasn't, it will be saved automatically (Spring transaction management)
+            deviceDataRepository.save(entity)
         }
 
         cache.put(key, InstantValue(value, Instant.now()))
     }
 
     private fun getCacheKey(device: Device, property: Property): String = device.id.toString() + "_" + property.name
-
-    private fun createEntity(device: Device, property: Property, value: String): DeviceData {
-        val entity = DeviceData()
-        entity.device = device
-        entity.property = property.name
-        entity.value = value
-        return entity
-    }
 
     enum class Property {
         DAILY_PRODUCTION,

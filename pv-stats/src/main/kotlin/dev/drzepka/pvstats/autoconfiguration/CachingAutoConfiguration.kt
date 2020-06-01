@@ -53,7 +53,7 @@ class CachingAutoConfiguration {
 
         val deviceDataCache = CacheConfigurationBuilder
                 .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(30))
-                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(2)))
+                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(1)))
                 .build()
 
         return mapOf(
