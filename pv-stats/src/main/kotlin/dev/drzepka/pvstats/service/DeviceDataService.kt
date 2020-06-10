@@ -34,16 +34,18 @@ class DeviceDataService(
 
     @Suppress("UNCHECKED_CAST")
     fun getString(device: Device, property: Property, invalidate: Boolean = false): InstantValue<String>? {
-        val key = getCacheKey(device, property)
-        var value = cache.get(key) as InstantValue<String>?
+        val cacheKey = getCacheKey(device, property)
+        var value = cache.get(cacheKey) as InstantValue<String>?
 
         if (value == null) {
-            val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, key)
+            val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, property.name)
             value = if (entity != null) InstantValue(entity.value, entity.updatedAt.toInstant()) else null
             if (invalidate && entity != null)
                 deviceDataRepository.delete(entity)
+            if (!invalidate && value != null)
+                cache.put(cacheKey, value)
         } else if (invalidate) {
-            cache.remove(key)
+            cache.remove(cacheKey)
         }
 
         return value
