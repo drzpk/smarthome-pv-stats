@@ -105,6 +105,12 @@ tasks.register("copyResources", type = Copy::class) {
         into("resources/httpd")
     }
 
+    from(File(sourceDirectory, "scripts")) {
+        include("*.sh")
+        into("scripts")
+        filter(mapOf(Pair("eol", org.apache.tools.ant.filters.FixCrLfFilter.CrLf.newInstance("lf"))), org.apache.tools.ant.filters.FixCrLfFilter::class.java)
+    }
+
     destinationDir = bundleDirectory
 
     doLast {
