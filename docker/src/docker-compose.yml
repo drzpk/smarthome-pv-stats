@@ -16,6 +16,7 @@ services:
   pv-stats:
     image: pv-stats:${PV_STATS_VERSION}
     container_name: pv-stats
+    restart: on-failure
     environment:
       PV_STATS_DB_USER: ${PV_STATS_DB_USER}
       PV_STATS_DB_PASSWORD: ${PV_STATS_DB_PASSWORD}
