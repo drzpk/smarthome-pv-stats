@@ -34,16 +34,18 @@ class DeviceDataService(
 
     @Suppress("UNCHECKED_CAST")
     fun getString(device: Device, property: Property, invalidate: Boolean = false): InstantValue<String>? {
-        val key = property.name
-        var value = cache.get(key) as InstantValue<String>?
+        val cacheKey = getCacheKey(device, property)
+        var value = cache.get(cacheKey) as InstantValue<String>?
 
         if (value == null) {
-            val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, key)
+            val entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, property.name)
             value = if (entity != null) InstantValue(entity.value, entity.updatedAt.toInstant()) else null
             if (invalidate && entity != null)
                 deviceDataRepository.delete(entity)
+            if (!invalidate && value != null)
+                cache.put(cacheKey, value)
         } else if (invalidate) {
-            cache.remove(key)
+            cache.remove(cacheKey)
         }
 
         return value
@@ -57,28 +59,28 @@ class DeviceDataService(
 
     @Transactional(value = Transactional.TxType.REQUIRED)
     fun set(device: Device, property: Property, value: String) {
-        val key = property.name
+        val key = getCacheKey(device, property)
 
-        if (cache.containsKey(key)) {
-            if (deviceDataRepository.replaceValue(device.id, key, value) == 0) {
-                log.trace("Cache value for device ${device.id} and key $key didn't exist in the database but it did in the cache")
-                deviceDataRepository.save(createEntity(device, property, value))
+        var entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, property.name)
+        val wasNull = entity == null
+        if (entity == null) {
+            log.debug("Device proparty ${property.name} for device $device didn't exist, creating")
+            entity = DeviceData().apply {
+                this.device = device
+                this.property = property.name
             }
-        } else {
-            deviceDataRepository.deleteByDeviceAndProperty(device, key)
-            deviceDataRepository.save(createEntity(device, property, value))
+        }
+
+        entity.value = value
+        if (wasNull) {
+            // If wasn't, it will be saved automatically (Spring transaction management)
+            deviceDataRepository.save(entity)
         }
 
         cache.put(key, InstantValue(value, Instant.now()))
     }
 
-    private fun createEntity(device: Device, property: Property, value: String): DeviceData {
-        val entity = DeviceData()
-        entity.device = device
-        entity.property = property.name
-        entity.value = value
-        return entity
-    }
+    private fun getCacheKey(device: Device, property: Property): String = device.id.toString() + "_" + property.name
 
     enum class Property {
         DAILY_PRODUCTION,
