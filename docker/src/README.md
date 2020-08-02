@@ -4,10 +4,20 @@
 1. If services are running (update deployment), stop them first by executing the command `docker-compose down`.
 2. Run install script to load required Docker images: `install/install.sh`
 3. Set required environment variables in the `.env` file.
-4. Replace placeholders in the `resources/maria/init/init.sql` file to match those from `.env` file.
-These placeholders cannot be replaced automatically (at least at the moment).
+4. Run `scripts/update_resources.sh` to process resources before lanuching th deployment. This step is required
+after each change of the `.env` file.
 5. Set proper domain names in the `config/httpd/pv-stats.conf` files.
 6. Start all services: `docker-compose up -d`.
+
+### Updating
+
+1. Stop all services: `docker-compose down` 
+2. Unpack new archive and replace all contents except the following files and directories:
+    - `data/`
+    - `config/`
+    - `.env` - new items may have been added so contents of this file should be compared with new new version
+3. Trigger resources update: `scripts/update_resources.sh`.
+4. Start all services: `docker-compose up -d`.
 
 ### Obtaining SSL certificate (Let's encrypt)
 ENV file requires providing the location of cartificate and private key files.

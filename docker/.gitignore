@@ -1,2 +1,3 @@
 **/*.war
-**/maria-data
+src/resources/mariadb/data/
+src/resources/mariadb/init/init.sql

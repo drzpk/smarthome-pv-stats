@@ -8,8 +8,8 @@ services:
     ports:
       - 3306:3306
     volumes:
-      - ./resources/maria-init:/docker-entrypoint-initdb.d:z
-      - ./resources/maria-data:/var/lib/mysql:z
+      - ./resources/mariadb/init:/docker-entrypoint-initdb.d:z
+      - ./data/mariadb:/var/lib/mysql:z
     restart: on-failure
     networks:
       - sh-network
@@ -37,7 +37,7 @@ services:
     environment:
       GF_INSTALL_PLUGINS: simpod-json-datasource 0.2.0
     volumes:
-      - ./resources/grafana-data:/var/lib/grafana:z
+      - ./data/grafana:/var/lib/grafana:z
     networks:
       - sh-network
   httpd:

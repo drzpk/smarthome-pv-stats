@@ -27,7 +27,7 @@ tasks.register("createArchive", type = Zip::class) {
 
     from(bundleDirectory)
     include("**/*")
-    exclude("**/maria-data", "**/grafana-data")
+    exclude("**/mariadb/data", "**/grafana-data")
     archiveBaseName.set("smart-home")
     archiveVersion.set(pvStatsProject.version.toString())
     destinationDirectory.set(buildDir)
@@ -42,7 +42,7 @@ tasks.register("saveImages", type = Exec::class) {
         imagesDirectory.mkdirs()
     }
 
-    workingDir("src/pv-stats")
+    workingDir("src/images/pv-stats")
     standardOutput = out
     errorOutput = out
     commandLine("cmd", "/c", "docker save pv-stats:${pvStatsProject.version} -o ${imagesDirectory.absolutePath}/$pvStatsArchiveName")
@@ -61,7 +61,7 @@ tasks.register("saveImages", type = Exec::class) {
 tasks.register("buildImages", type = Exec::class) {
     dependsOn("copyArtifacts")
 
-    workingDir("src/pv-stats")
+    workingDir("src/images/pv-stats")
     standardOutput = out
     errorOutput = out
     commandLine("cmd", "/c", "docker build --tag pv-stats:${pvStatsProject.version} .")
@@ -73,7 +73,7 @@ tasks.register("copyArtifacts", type = Copy::class) {
     val artifactDir = File(pvStatsProject.buildDir, "libs")
     from(artifactDir) {
         include("*.war")
-        into("pv-stats")
+        into("src/images/pv-stats")
         rename(".*", "application.war")
     }
 
@@ -84,23 +84,18 @@ tasks.register("copyResources", type = Copy::class) {
     from(sourceDirectory) {
         include(".env", "*.yml", "*.md")
         into(".")
+        filter(mapOf(Pair("eol", org.apache.tools.ant.filters.FixCrLfFilter.CrLf.newInstance("lf"))), org.apache.tools.ant.filters.FixCrLfFilter::class.java)
     }
 
-    from(File(sourceDirectory, "pv-stats")) {
-        include("*.yml", "*.xml")
-        into("config/pv-stats")
+    from(File(sourceDirectory, "config")) {
+        into("config")
     }
 
-    from(File(sourceDirectory, "mariadb")) {
-        into("resources/maria-init")
+    from(File(sourceDirectory, "resources/mariadb/templates")) {
+        into("resources/mariadb/templates")
     }
 
-    from(File(sourceDirectory, "httpd")) {
-        include("pv-stats.conf")
-        into("config/httpd")
-    }
-
-    from(File(sourceDirectory, "httpd")) {
+    from(File(sourceDirectory, "resources/httpd")) {
         include("**/entrypoint.sh")
         into("resources/httpd")
     }
