@@ -1,12 +1,12 @@
 package dev.drzepka.pvstats.service.data
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
-import dev.drzepka.pvstats.util.kAny
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -26,7 +26,7 @@ class MeasurementServiceTest {
     private var findForDateRangeTo: Date? = null
 
     private val measurementRepository = mock<MeasurementRepository> {
-        on { findForDateRange(Mockito.anyInt(), kAny(), kAny()) } doAnswer {
+        on { findForDateRange(Mockito.anyInt(), any(), any()) } doAnswer {
             findForDateRangeFrom = it.arguments[1] as Date
             findForDateRangeTo = it.arguments[2] as Date
             emptyList()
@@ -45,7 +45,7 @@ class MeasurementServiceTest {
     }
 
     @Test
-    fun `check getting measurements for day`() {
+    fun `should get all measurements for given day`() {
         val service = getService()
         val now = LocalDate.now()
         service.getAllForDay(getDevice(), now)
@@ -54,14 +54,14 @@ class MeasurementServiceTest {
     }
 
     @Test
-    fun `check generating new measurement if none was found`() {
+    fun `should generate a new measurement if none was found`() {
         val service = getService()
         val lastMeasurement = service.getLastMeasurement(getDevice())
         Assertions.assertEquals(0, lastMeasurement.timestamp.time)
     }
 
     @Test
-    fun `check storing all new measurements`() {
+    fun `should store all new measurements`() {
         val service = getService()
         val newItems = getMeasurements(LocalDateTime.now(), 5)
         val lastStored = getMeasurements(LocalDateTime.now().minusDays(10), 1).first()
@@ -71,7 +71,7 @@ class MeasurementServiceTest {
     }
 
     @Test
-    fun `check storing some of measurements`() {
+    fun `should store some of new measurements`() {
         val service = getService()
         val newItems = getMeasurements(LocalDateTime.now(), 10)
         val lastStored = newItems[3]
@@ -81,7 +81,7 @@ class MeasurementServiceTest {
     }
 
     @Test
-    fun `check not storing existing measurements`() {
+    fun `should not store existing measurements`() {
         val service = getService()
         val newItems = getMeasurements(LocalDateTime.now(), 10)
         val lastStored = newItems.last()

@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test
 class TokenizerTest {
 
     @Test
-    fun `check standard splitting`() {
+    fun `should correctly split standard cases`() {
         val tokens = Tokenizer.tokenize("abc def 123")
         then(tokens).hasSize(3)
         then(tokens[0]).isEqualTo("abc")
@@ -17,7 +17,7 @@ class TokenizerTest {
     }
 
     @Test
-    fun `check with quotes`() {
+    fun `should correctly split cases with quotes`() {
         val tokens = Tokenizer.tokenize("--param \"value\" normal")
         then(tokens).hasSize(3)
         then(tokens[0]).isEqualTo("--param")
@@ -26,7 +26,7 @@ class TokenizerTest {
     }
 
     @Test
-    fun `check with quotes at the end`() {
+    fun `should correctly split cases with quotes at the end`() {
         val tokens = Tokenizer.tokenize("--param \"value\"")
         then(tokens).hasSize(2)
         then(tokens[0]).isEqualTo("--param")
@@ -34,7 +34,7 @@ class TokenizerTest {
     }
 
     @Test
-    fun `check unclosed quotes`() {
+    fun `should detect unclosed quotes`() {
         Assertions.assertThrows(ApplicationException::class.java) {
             Tokenizer.tokenize("--param \"value")
         }

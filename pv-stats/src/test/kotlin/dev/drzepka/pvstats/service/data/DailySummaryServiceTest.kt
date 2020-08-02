@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.service.data
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -11,7 +12,6 @@ import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.service.data.summary.Summary
 import dev.drzepka.pvstats.service.data.summary.SummaryProcessor
-import dev.drzepka.pvstats.util.kAny
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import java.time.Duration
@@ -25,14 +25,14 @@ class DailySummaryServiceTest {
         on { getActiveDevices() } doReturn listOf(Device())
     }
     private val measurementService = mock<MeasurementService> {
-        on { getAllForDay(kAny(), kAny()) } doReturn emptyList()
-        on { getFirstMeasurement(kAny()) } doAnswer { firstMeasurement }
+        on { getAllForDay(any(), any()) } doReturn emptyList()
+        on { getFirstMeasurement(any()) } doAnswer { firstMeasurement }
     }
     private val energyMeasurementDailySummaryRepository = mock<EnergyMeasurementDailySummaryRepository> {
-        on { findFirstByDeviceOrderByCreatedAtDesc(kAny()) } doAnswer { lastSummary }
+        on { findFirstByDeviceOrderByCreatedAtDesc(any()) } doAnswer { lastSummary }
     }
     private val handlerResolverService = mock<HandlerResolverService> {
-        on { summary(kAny()) } doReturn MockProcessor()
+        on { summary(any()) } doReturn MockProcessor()
     }
 
     // Input
@@ -43,7 +43,7 @@ class DailySummaryServiceTest {
     private val calculatedForDays = ArrayList<LocalDate>()
 
     @Test
-    fun `check creating first summary`() {
+    fun `should correctly create first summary`() {
         val service = getService()
         firstMeasurement = EnergyMeasurement()
         firstMeasurement?.timestamp = Date.from(Instant.now().minus(Duration.ofDays(3)))
@@ -57,7 +57,7 @@ class DailySummaryServiceTest {
     }
 
     @Test
-    fun `check creating single summary for yesterday`() {
+    fun `should correctly create a single summary for yesterday`() {
         val service = getService()
         lastSummary = EnergyMeasurementDailySummary()
         lastSummary?.createdAt = LocalDate.now().minusDays(2)
@@ -69,7 +69,7 @@ class DailySummaryServiceTest {
     }
 
     @Test
-    fun `check not creating summary - missing data`() {
+    fun `should not create summary - missing data`() {
         val service = getService()
 
         service.createSummary()

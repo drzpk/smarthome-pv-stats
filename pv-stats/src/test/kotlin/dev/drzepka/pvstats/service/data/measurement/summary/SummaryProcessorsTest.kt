@@ -24,7 +24,7 @@ class SummaryProcessorsTest {
     )
 
     @Test
-    fun `check single record`() {
+    fun `should calculate summary for a single record`() {
         summaryProcessors.forEach {
             println("Checking ${it.deviceType}")
 
@@ -41,7 +41,7 @@ class SummaryProcessorsTest {
     }
 
     @Test
-    fun `check multiple records`() {
+    fun `should calculate summary for multiple records`() {
         summaryProcessors.forEach {
             println("Checking ${it.deviceType}")
 
@@ -67,7 +67,7 @@ class SummaryProcessorsTest {
 
 
     @Test
-    fun `check with no time difference`() {
+    fun `should calculate summary with no time difference`() {
         // Duplicated records should be excluded from calculation
         summaryProcessors.forEach {
             val now = LocalTime.now()
@@ -86,7 +86,7 @@ class SummaryProcessorsTest {
 
 
     @Test
-    fun `check with no data`() {
+    fun `should calculate summary with no data`() {
         summaryProcessors.forEach {
             val data = emptyList<EnergyMeasurement>()
             val summary = getSummaryEntity()

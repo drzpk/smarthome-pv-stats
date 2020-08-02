@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.migration
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -8,7 +9,6 @@ import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.repository.MeasurementRepository
-import dev.drzepka.pvstats.util.kAny
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -27,7 +27,7 @@ class SMAPowerMigrationExecutorTest {
         on { findFirstByDeviceIdOrderByTimestampAsc(Mockito.anyInt()) } doAnswer {
             measurements?.get(0)
         }
-        on { findForDateRange(Mockito.anyInt(), kAny(), kAny()) } doAnswer {
+        on { findForDateRange(any(), any(), any()) } doAnswer {
             from = it.arguments[1] as Date
             to = it.arguments[2] as Date
 
@@ -46,7 +46,7 @@ class SMAPowerMigrationExecutorTest {
     private var to: Date? = null
 
     @Test
-    fun `check date range calculation`() {
+    fun `should calculate data range`() {
         measurements = listOf(getMeasurement(1, 0, 0, 0, 0))
 
         getExecutor().execute()
@@ -57,7 +57,7 @@ class SMAPowerMigrationExecutorTest {
     }
 
     @Test
-    fun `check power calculation`() {
+    fun `should calculate power`() {
         measurements = listOf(
                 getMeasurement(1, 100, 10, 0, 0),
                 getMeasurement(2, 200, 10, 5, 0),

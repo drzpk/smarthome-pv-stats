@@ -20,7 +20,7 @@ class DeviceServiceTest {
     }
 
     @Test
-    fun `check validation on device creation`() {
+    fun `should do validation on device creation`() {
         val service = getService()
 
         Assertions.assertThrows(ApplicationException::class.java) {
@@ -33,14 +33,14 @@ class DeviceServiceTest {
     }
 
     @Test
-    fun `check saving entity`() {
+    fun `should save device entity`() {
         val service = getService()
         service.addDevice("name", "description", DeviceType.SMA)
         verify(deviceRepository, Mockito.times(1)).save(Mockito.any())
     }
 
     @Test
-    fun `check not saving when no properties were modified`() {
+    fun `should not save entity when no properties were modified`() {
         val service = getService()
         service.modifyDevice(1, null, null, null)
         verify(deviceRepository, Mockito.times(0)).save(Mockito.any(Device::class.java))

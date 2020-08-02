@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.service
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
@@ -7,7 +8,6 @@ import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.DeviceData
 import dev.drzepka.pvstats.repository.DeviceDataRepository
 import dev.drzepka.pvstats.util.MockCache
-import dev.drzepka.pvstats.util.kAny
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito
@@ -17,14 +17,14 @@ import javax.cache.CacheManager
 class DeviceDataServiceTest {
 
     private val deviceDataRepository = mock<DeviceDataRepository> {
-        on { save(kAny()) } doAnswer { it.arguments[0] as DeviceData }
+        on { save<DeviceData>(any()) } doAnswer { it.arguments[0] as DeviceData }
     }
     private val cacheManager = mock<CacheManager> {
         on { getCache<Any, Any>(Mockito.anyString()) } doReturn MockCache()
     }
 
     @Test
-    fun `check storing cache for multiple devices`() {
+    fun `should correctly store cache for multiple devices`() {
         val device1 = getDevice()
         val device2 = getDevice()
 

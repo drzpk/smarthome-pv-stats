@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.service.data.measurement
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.common.model.sma.Entry
@@ -11,7 +12,6 @@ import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
-import dev.drzepka.pvstats.util.kAny
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import java.time.Instant
@@ -22,8 +22,8 @@ class SMAMeasurementProcessorTest {
 
     @Suppress("UNCHECKED_CAST")
     private val measurementService = mock<MeasurementService> {
-        on { getLastMeasurement(kAny()) } doAnswer { storedMeasurements.lastOrNull() }
-        on { storeNewMeasurements(kAny(), kAny()) } doAnswer {
+        on { getLastMeasurement(any()) } doAnswer { storedMeasurements.lastOrNull() }
+        on { storeNewMeasurements(any(), any()) } doAnswer {
             storedMeasurements.addAll(it.arguments[0] as List<EnergyMeasurement>)
         }
     }
@@ -32,7 +32,7 @@ class SMAMeasurementProcessorTest {
     private var storedMeasurements = ArrayList<EnergyMeasurement>()
 
     @Test
-    fun `check if new measurements are correct`() {
+    fun `should create correct measurements`() {
         val now = Instant.now()
         val entry1 = Entry(Date.from(now.minusSeconds(60)), 100)
         val entry2 = Entry(Date.from(now.minusSeconds(30)), 200)
@@ -56,7 +56,7 @@ class SMAMeasurementProcessorTest {
     }
 
     @Test
-    fun `check if measurements don't overlap - common element`() {
+    fun `measurements shouldn't overlap - common element`() {
         // There's a common element (with matching timestamp) between new and stored measurements
         val now = Instant.now()
 
@@ -81,7 +81,7 @@ class SMAMeasurementProcessorTest {
     }
 
     @Test
-    fun `check if measurements don't overlap - no common element`() {
+    fun `measurements shouldn't overlap - no common element`() {
         // There isn't a common element (no matching timestampe)
         val now = Instant.now()
 
@@ -106,7 +106,7 @@ class SMAMeasurementProcessorTest {
     }
 
     @Test
-    fun `check if deltaWh is set to 0 if interval between records is too large`() {
+    fun `deltaWh should be set to 0 if interval between records is too large`() {
         val measurementConfig = MeasurementConfig()
         measurementConfig.maxAllowedIntervalSeconds = 300
         storedMeasurements.add(EnergyMeasurement().apply {

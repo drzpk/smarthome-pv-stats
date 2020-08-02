@@ -12,7 +12,7 @@ import java.util.*
 class SMADataTest {
 
     @Test
-    fun `check date serialization`() {
+    fun `should serialize date`() {
         // SMA measurement are only accurate up to seconds
         val date = Date.from(Instant.now()
                 .with(ChronoField.MILLI_OF_SECOND, 0)

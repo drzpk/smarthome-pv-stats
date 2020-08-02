@@ -18,7 +18,7 @@ class MigrationServiceTest {
     private val migrations = ArrayList<Migration>()
 
     @Test
-    fun `check failed migration detection`() {
+    fun `should detect failed migration`() {
         val migration = Migration()
         migration.status = false
         migrations.add(migration)

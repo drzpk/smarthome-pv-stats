@@ -1,6 +1,8 @@
 package dev.drzepka.pvstats.service.data.measurement
 
+import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.util.hexStringToBytes
@@ -10,8 +12,6 @@ import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.service.DeviceDataService
-import dev.drzepka.pvstats.util.kAny
-import dev.drzepka.pvstats.util.kEq
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -24,12 +24,12 @@ import javax.cache.CacheManager
 class SofarMeasurementProcessorTest {
 
     private val deviceDataService = mock<DeviceDataService> {
-        on { getInt(kAny(), kEq(DeviceDataService.Property.DAILY_PRODUCTION), Mockito.anyBoolean()) } doAnswer { dailyProduction }
+        on { getInt(any(), eq(DeviceDataService.Property.DAILY_PRODUCTION), Mockito.anyBoolean()) } doAnswer { dailyProduction }
     }
     private val cacheManager = mock<CacheManager> {}
     private val measurementRepository = mock<MeasurementRepository> {
         on { findLast(Mockito.anyInt()) } doAnswer { lastMeasurement }
-        on { save(kAny()) } doAnswer { savedMeasurement = it.arguments[0] as EnergyMeasurement; savedMeasurement }
+        on { save<EnergyMeasurement>(any()) } doAnswer { savedMeasurement = it.arguments[0] as EnergyMeasurement; savedMeasurement }
     }
 
     // Input
@@ -41,7 +41,7 @@ class SofarMeasurementProcessorTest {
     private var savedMeasurement: EnergyMeasurement? = null
 
     @Test
-    fun `check processing with OUTDATED DAILY_PRODUCTION device data`() {
+    fun `should process with OUTDATED DAILY_PRODUCTION device data`() {
         dailyProduction = InstantValue(23400, Instant.now().minus(Duration.ofDays(1)))
         lastMeasurement = EnergyMeasurement()
         lastMeasurement?.totalWh = 63500
@@ -55,28 +55,28 @@ class SofarMeasurementProcessorTest {
     }
 
     @Test
-    fun `check estimation - no correction`() {
+    fun `should estimate - no correction`() {
         val service = getService()
         val estimation = service.getEstimatedTotalProductionWh(10400, 10000, 200)
         Assertions.assertEquals(10600, estimation)
     }
 
     @Test
-    fun `check estimation - correction to up`() {
+    fun `should estimate - correction to up`() {
         val service = getService()
         val estimation = service.getEstimatedTotalProductionWh(11050, 12000, 900)
         Assertions.assertEquals(12450, estimation)
     }
 
     @Test
-    fun `check estimation - correction to down`() {
+    fun `should estimate - correction to down`() {
         val service = getService()
         val estimation = service.getEstimatedTotalProductionWh(10400, 10000, 700)
         Assertions.assertEquals(10850, estimation)
     }
 
     @Test
-    fun `check estimation - big difference`() {
+    fun `should estimate - big difference`() {
         val service = getService()
         val estimation = service.getEstimatedTotalProductionWh(0, 10000, 900)
         Assertions.assertEquals(10000, estimation)
