@@ -7,7 +7,7 @@
 4. Replace placeholders in the `resources/maria/init/init.sql` file to match those from `.env` file.
 These placeholders cannot be replaced automatically (at least at the moment).
 5. Set proper domain names in the `config/httpd/pv-stats.conf` files.
-6. Start all services: `docker-compoase up -d`.
+6. Start all services: `docker-compose up -d`.
 
 ### Obtaining SSL certificate (Let's encrypt)
 ENV file requires providing the location of cartificate and private key files.

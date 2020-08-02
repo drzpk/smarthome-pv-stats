@@ -21,6 +21,7 @@ class CreateDataSourceCommand(private val dataSourceService: DataSourceService) 
                 "Data source ${dataSource.id} for device ${dataSource.device!!.id} has been created",
                 "",
                 "Credentials for MySQL and backend connection:",
+                "Database: ${dataSource.schema}",
                 "Username: ${dataSource.user}",
                 "Password: $password",
                 "",

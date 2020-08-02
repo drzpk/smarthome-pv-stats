@@ -1,5 +1,5 @@
 spring:
   datasource:
-    url: jdbc:mysql://mariadb:3306/pv_stats
+    url: jdbc:mysql://mariadb:3306/${PV_STATS_DB_SCHEMA}
     username: ${PV_STATS_DB_USER}
     password: ${PV_STATS_DB_PASSWORD}

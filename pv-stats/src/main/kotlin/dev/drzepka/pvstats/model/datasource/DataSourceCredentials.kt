@@ -4,5 +4,5 @@ import dev.drzepka.pvstats.entity.DataSource
 
 data class DataSourceCredentials(
         val dataSource: DataSource,
-        val password: String
+        val plainPassword: String
 )

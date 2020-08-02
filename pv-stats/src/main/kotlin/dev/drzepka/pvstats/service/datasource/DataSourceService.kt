@@ -6,6 +6,7 @@ import dev.drzepka.pvstats.model.datasource.DataSourceCredentials
 import dev.drzepka.pvstats.repository.DataSourceRepository
 import dev.drzepka.pvstats.repository.SchemaManagementRepository
 import dev.drzepka.pvstats.service.DeviceService
+import dev.drzepka.pvstats.util.DataSourceUtils
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
@@ -14,7 +15,6 @@ import org.springframework.transaction.support.TransactionTemplate
 import java.security.SecureRandom
 import javax.annotation.PostConstruct
 import javax.transaction.Transactional
-import kotlin.random.Random
 
 @Service
 class DataSourceService(
@@ -49,17 +49,19 @@ class DataSourceService(
 
         var dataSource = DataSource()
         val plainPassword = generateUserPassword()
-        dataSource.user = generateUserName()
+        dataSource.schema = DataSourceUtils.generateSchemaName(device.name)
+        dataSource.user = DataSourceUtils.generateUserName(device.name)
         dataSource.password = passwordEncoder.encode(plainPassword)
         dataSource.device = device
-        dataSource.updatedAtVersion = schemaManagementRepository.getSchemaVersion()
+        dataSource.updatedAtVersion = schemaManagementRepository.getMainSchemaVersion()
 
         dataSource = dataSourceRepository.save(dataSource)
         log.info("Created data source $dataSource")
 
         val credentials = DataSourceCredentials(dataSource, plainPassword)
         createUser(credentials)
-        recreateViews(dataSource)
+        createSchema(dataSource.schema)
+        recreateViewsAndPrivileges(dataSource)
 
         return credentials
     }
@@ -69,7 +71,7 @@ class DataSourceService(
         val dataSource = dataSourceRepository.findById(dataSourceId).orElse(null)
                 ?: throw ApplicationException("data source with id $dataSourceId wasn't found")
 
-        deleteViews(dataSource)
+        deleteSchema(dataSource.schema)
         deleteUser(dataSource.user)
         dataSourceRepository.delete(dataSource)
     }
@@ -92,22 +94,23 @@ class DataSourceService(
 
     internal fun checkAvailableViewNames() {
         log.info("Validating view names")
+        val mainSchemaName = schemaManagementRepository.getMainSchemaName()
         AVAILABLE_VIEWS.forEach {
-            if (!schemaManagementRepository.tableExists(it))
-                throw IllegalStateException("Table $it doesn't exist")
+            if (!schemaManagementRepository.tableExists(mainSchemaName, it))
+                throw IllegalStateException("Table $mainSchemaName.$it doesn't exist")
         }
     }
 
     internal fun checkDataSources() {
         log.info("Validating data sources")
-        val currentSchemaVersion = schemaManagementRepository.getSchemaVersion()
+        val currentSchemaVersion = schemaManagementRepository.getMainSchemaVersion()
         dataSourceRepository.findAll()
                 .filter { it.updatedAtVersion != currentSchemaVersion }
                 .forEach {
                     log.info("Data source ${it.id} (${it.device!!.name}) was created for older schema, " +
                             "migrating: ${it.updatedAtVersion} -> $currentSchemaVersion")
 
-                    recreateViews(it)
+                    recreateViewsAndPrivileges(it)
                     it.updatedAtVersion = currentSchemaVersion
                     dataSourceRepository.save(it)
                 }
@@ -115,7 +118,34 @@ class DataSourceService(
 
     private fun createUser(credentials: DataSourceCredentials) {
         log.info("Creating user `${credentials.dataSource.user}`")
-        schemaManagementRepository.createUser(credentials.dataSource.user, credentials.password)
+        schemaManagementRepository.createUser(credentials.dataSource.user, credentials.plainPassword)
+    }
+
+    private fun createSchema(schemaName: String) {
+        log.info("Creating scheam $schemaName")
+        schemaManagementRepository.createSchema(schemaName)
+    }
+
+    private fun recreateViewsAndPrivileges(dataSource: DataSource) {
+        log.info("Recreating views for datasource ${dataSource.id} (${dataSource.device?.name})")
+        deleteViews(dataSource)
+
+        log.debug("Revoking all privileges from user ${dataSource.user}")
+        schemaManagementRepository.revokeAllPrivileges(dataSource.user)
+
+        val mainSchemaName = schemaManagementRepository.getMainSchemaName()
+        AVAILABLE_VIEWS.forEach { viewName ->
+            log.debug("Creating view ${dataSource.schema}.$viewName")
+            schemaManagementRepository.createView(dataSource.schema, viewName, mainSchemaName, viewName, dataSource.device!!.id)
+        }
+
+        log.debug("Granting SELECT privileges on schema ${dataSource.schema} to user ${dataSource.user}")
+        schemaManagementRepository.grantSelectPrivilegesToSchema(dataSource.user, dataSource.schema)
+    }
+
+    private fun deleteSchema(schemaName: String) {
+        log.info("Deleting schema $schemaName")
+        schemaManagementRepository.dropSchema(schemaName)
     }
 
     private fun deleteUser(userName: String) {
@@ -123,39 +153,16 @@ class DataSourceService(
         schemaManagementRepository.dropUser(userName)
     }
 
-    private fun recreateViews(dataSource: DataSource) {
-        log.info("Recreating views for datasource ${dataSource.id}")
-        deleteViews(dataSource)
-
-        val schemaName = schemaManagementRepository.getSchemaName()
-        AVAILABLE_VIEWS.forEach {
-            val viewName = VIEW_PREFIX + dataSource.id + "_" + it
-            log.debug("Creating view $viewName")
-            schemaManagementRepository.createView(viewName, it, dataSource.device!!.id)
-
-            log.debug("Granting user ${dataSource.user} privilege to view $viewName")
-            schemaManagementRepository.grantSelectPrivilegesToTable(schemaName, viewName, dataSource.user)
-        }
-    }
-
     private fun deleteViews(dataSource: DataSource) {
-        log.info("Deleting views for data source ${dataSource.id}")
-        schemaManagementRepository.getViewNames().forEach {
-            val match = VIEW_DEVICE_ID_EXTRACTOR.matchEntire(it)
-            if (match == null) {
-                log.warn("Found view '$it' that doesn't match view naming pattern")
-                return@forEach
-            }
+        log.info("Deleting views for data source ${dataSource.id} (device: ${dataSource.device?.name}, schema: ${dataSource.schema})")
+        schemaManagementRepository.getViewNames(dataSource.schema).forEach { viewName ->
+            if (!AVAILABLE_VIEWS.contains(viewName))
+                log.warn("Schema ${dataSource.schema} contains table $viewName that isn't registerd")
 
-            val dataSourceId = match.groupValues[1].toInt()
-            if (dataSourceId != dataSource.id) return@forEach
-
-            log.debug("Deleting view $it")
-            schemaManagementRepository.dropView(it)
+            log.debug("Deleting view $viewName")
+            schemaManagementRepository.dropView(dataSource.schema, viewName)
         }
     }
-
-    private fun generateUserName() = USER_PREFIX + Random.Default.nextInt(1000).toString().padStart(length = 3, padChar = '0')
 
     private fun generateUserPassword(): String =
             (0 until PASSWORD_LENGTH)
@@ -165,9 +172,6 @@ class DataSourceService(
     companion object {
         internal val AVAILABLE_VIEWS = listOf("energy_measurement", "energy_measurement_daily_summary")
 
-        private const val VIEW_PREFIX = "view_"
-        private const val USER_PREFIX = "viewer_"
-        private val VIEW_DEVICE_ID_EXTRACTOR = Regex("^view_(\\d+)_.*\$")
 
         private const val AVAILABLE_PASSWORD_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
         private const val PASSWORD_LENGTH = 20

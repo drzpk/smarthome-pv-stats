@@ -8,6 +8,8 @@ class DataSource {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Int = 0
+    @Column(name = "`schema`")
+    var schema: String = ""
     var user: String = ""
     var password: String = ""
     @OneToOne

@@ -19,12 +19,13 @@ class ListDataSourcesCommand(private val dataSourceService: DataSourceService) :
                 "Id",
                 "Device name",
                 "Device id",
+                "Schema name",
                 "User name",
                 "Created at"
         )
 
         val data = dataSourceService.getDataSources().map {
-            listOf(it.id.toString(), it.device!!.name, it.device!!.id.toString(), it.user, Commons.DATE_FORMAT.format(it.createdAt))
+            listOf(it.id.toString(), it.device!!.name, it.device!!.id.toString(), it.schema, it.user, Commons.DATE_FORMAT.format(it.createdAt))
         }
 
         return TablePrinter.getTable(headers, data)
