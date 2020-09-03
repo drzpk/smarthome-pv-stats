@@ -35,7 +35,11 @@ abstract class MeasurementProcessor<T : VendorData> {
             throw e
         }
 
-        process(device, deserialized)
+        try {
+            process(device, deserialized)
+        } catch (e: Exception) {
+            log.error("Error while processing measurement for $device", e)
+        }
     }
 
     @Autowired

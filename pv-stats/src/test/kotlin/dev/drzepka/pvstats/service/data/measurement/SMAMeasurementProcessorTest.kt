@@ -2,6 +2,7 @@ package dev.drzepka.pvstats.service.data.measurement
 
 import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
+import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
 import dev.drzepka.pvstats.common.model.sma.Entry
 import dev.drzepka.pvstats.common.model.sma.SMADeviceData
@@ -22,9 +23,10 @@ class SMAMeasurementProcessorTest {
 
     @Suppress("UNCHECKED_CAST")
     private val measurementService = mock<MeasurementService> {
-        on { getLastMeasurement(any()) } doAnswer { storedMeasurements.lastOrNull() }
-        on { storeNewMeasurements(any(), any()) } doAnswer {
+        on { getLastMeasurement(any(), eq(true)) } doAnswer { storedMeasurements.lastOrNull() }
+        on { saveMeasurements(any(), any()) } doAnswer {
             storedMeasurements.addAll(it.arguments[0] as List<EnergyMeasurement>)
+            Unit
         }
     }
     private val deviceDataService = mock<DeviceDataService> {}

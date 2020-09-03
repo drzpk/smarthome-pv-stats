@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.autoconfiguration
 
+import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.DataSourceUserDetails
 import org.ehcache.config.CacheConfiguration
 import org.ehcache.config.builders.CacheConfigurationBuilder
@@ -45,9 +46,14 @@ class CachingAutoConfiguration {
         return provider.getCacheManager(provider.defaultURI, defaultConfiguration)
     }
 
-    private fun getCaches(): Map<String, CacheConfiguration<Any, Any>> {
-       val lastMeasurementCache = CacheConfigurationBuilder
-                .newCacheConfigurationBuilder(Any::class.java, Any::class.java, ResourcePoolsBuilder.heap(10))
+    private fun getCaches(): Map<String, CacheConfiguration<out Any, out Any>> {
+        val lastMeasurementCache = CacheConfigurationBuilder
+                .newCacheConfigurationBuilder(Any::class.java, EnergyMeasurement::class.java, ResourcePoolsBuilder.heap(10))
+                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10)))
+                .build()
+
+        val secondLastMeasurementCache = CacheConfigurationBuilder
+                .newCacheConfigurationBuilder(Any::class.java, EnergyMeasurement::class.java, ResourcePoolsBuilder.heap(10))
                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(10)))
                 .build()
 
@@ -58,6 +64,7 @@ class CachingAutoConfiguration {
 
         return mapOf(
                 Pair(CACHE_LAST_MEASUREMENTS, lastMeasurementCache),
+                Pair(CACHE_SECOND_LAST_MEASUREMENTS, secondLastMeasurementCache),
                 Pair(CACHE_DEVICE_DATA, deviceDataCache)
         )
     }
@@ -66,6 +73,7 @@ class CachingAutoConfiguration {
 
     companion object {
         const val CACHE_LAST_MEASUREMENTS = "lastMeasurements"
+        const val CACHE_SECOND_LAST_MEASUREMENTS = "secondLastMeasurements"
         const val CACHE_DEVICE_DATA = "deviceData"
         const val KEY_GENERATOR_DEVICE_ID = "deviceIdKeyGenerator"
     }

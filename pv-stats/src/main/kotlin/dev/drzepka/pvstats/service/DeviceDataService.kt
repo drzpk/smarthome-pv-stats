@@ -64,7 +64,7 @@ class DeviceDataService(
         var entity = deviceDataRepository.findByDeviceIdAndProperty(device.id, property.name)
         val wasNull = entity == null
         if (entity == null) {
-            log.debug("Device proparty ${property.name} for device $device didn't exist, creating")
+            log.debug("Device property ${property.name} for device $device didn't exist, creating")
             entity = DeviceData().apply {
                 this.device = device
                 this.property = property.name

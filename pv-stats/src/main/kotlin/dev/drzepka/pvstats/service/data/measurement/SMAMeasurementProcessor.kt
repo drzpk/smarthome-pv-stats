@@ -10,6 +10,7 @@ import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Component
+import java.util.*
 import kotlin.math.floor
 
 @Component
@@ -36,7 +37,7 @@ class SMAMeasurementProcessor(
             return
         }
 
-        val lastMeasurement = measurementService.getLastMeasurement(device)
+        val lastMeasurement = measurementService.getLastMeasurement(device)!!
 
         // Most of the time only a few most recent records will be added as measurements, so start from the end
         var startFrom = 0
@@ -63,20 +64,26 @@ class SMAMeasurementProcessor(
 
         val measurements = ArrayList<EnergyMeasurement>()
         measurements.ensureCapacity(entries.size - startFrom)
-        measurements.add(createMeasurement(lastMeasurement, entries[startFrom], device))
+        val firstNewMeasurement = createMeasurement(lastMeasurement, entries[startFrom], device)
+        if (firstNewMeasurement != null)
+            measurements.add(firstNewMeasurement)
 
         for (i in startFrom + 1 until entries.size) {
             val newMeasurement = createMeasurement(measurements[i - startFrom - 1], entries[i], device)
+            if (newMeasurement == null) {
+                log.error("Only first measurement is expected to be invalid and missing")
+                continue
+            }
             newMeasurement.deviceId = device.id
             measurements.add(newMeasurement)
         }
 
-        measurementService.storeNewMeasurements(measurements, lastMeasurement)
+        measurementService.saveMeasurements(measurements, lastMeasurement)
     }
 
     override fun deserialize(data: Any): SMAData = SMAData.deserialize(data)
 
-    private fun createMeasurement(first: EnergyMeasurement, second: Entry, device: Device): EnergyMeasurement {
+    private fun createMeasurement(first: EnergyMeasurement, second: Entry, device: Device): EnergyMeasurement? {
         val measurement = EnergyMeasurement()
         measurement.timestamp = second.t
         measurement.totalWh = second.v ?: first.totalWh
@@ -91,6 +98,16 @@ class SMAMeasurementProcessor(
             measurement.totalWh - first.totalWh
         else
             0
+
+        if (measurement.deltaWh < 0) {
+            // Sometimes SMA returns chart data with null "v" values in the middle of a day
+            // and first non-null value is far smaller than it should be. No idea what it is happening,
+            // the only reasonable solution is to ignore such measurements.
+            log.warn("Cannot create measurement for device ${device.id} (${device.name}): " +
+                    "new measurement's totalWh value (${measurement.totalWh}) is smaller than " +
+                    "last measurement's ($first)")
+            return null
+        }
 
         var power = measurement.deltaWh / deltaHours
         if (power.isNaN() || power.isInfinite()) {

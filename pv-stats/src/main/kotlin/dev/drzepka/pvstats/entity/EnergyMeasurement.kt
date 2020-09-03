@@ -21,4 +21,8 @@ class EnergyMeasurement {
     @Column(name = "power_w")
     var powerW: Int = 0
     var deviceId: Int = 0
+
+    fun isValueIdentical(other: EnergyMeasurement): Boolean = this.totalWh == other.totalWh && this.deltaWh == other.deltaWh && this.powerW == other.powerW
+
+    override fun toString(): String = "Measurement(id=$id, totalWh=$totalWh, deltaWh=$deltaWh, powerW=$powerW, deviceId=$deviceId)"
 }

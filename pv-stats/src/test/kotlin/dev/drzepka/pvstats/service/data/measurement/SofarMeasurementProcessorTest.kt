@@ -10,8 +10,8 @@ import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.InstantValue
-import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.service.DeviceDataService
+import dev.drzepka.pvstats.service.data.MeasurementService
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
@@ -19,17 +19,15 @@ import org.mockito.Mockito
 import java.time.Duration
 import java.time.Instant
 import java.util.*
-import javax.cache.CacheManager
 
 class SofarMeasurementProcessorTest {
 
     private val deviceDataService = mock<DeviceDataService> {
         on { getInt(any(), eq(DeviceDataService.Property.DAILY_PRODUCTION), Mockito.anyBoolean()) } doAnswer { dailyProduction }
     }
-    private val cacheManager = mock<CacheManager> {}
-    private val measurementRepository = mock<MeasurementRepository> {
-        on { findLast(Mockito.anyInt()) } doAnswer { lastMeasurement }
-        on { save<EnergyMeasurement>(any()) } doAnswer { savedMeasurement = it.arguments[0] as EnergyMeasurement; savedMeasurement }
+    private val measurementService = mock<MeasurementService> {
+        on { getLastMeasurement(any(), any()) } doAnswer { lastMeasurement }
+        on { saveMeasurement(any()) } doAnswer { savedMeasurement = it.arguments[0] as EnergyMeasurement; Unit }
     }
 
     // Input
@@ -82,7 +80,7 @@ class SofarMeasurementProcessorTest {
         Assertions.assertEquals(10000, estimation)
     }
 
-    private fun getService(): SofarMeasurementProcessor = SofarMeasurementProcessor(deviceDataService, measurementRepository, measurementConfig, cacheManager)
+    private fun getService(): SofarMeasurementProcessor = SofarMeasurementProcessor(deviceDataService, measurementService, measurementConfig)
 
     private fun getDevice(): Device = Device()
 

@@ -1,6 +1,5 @@
 package dev.drzepka.pvstats.service.data.measurement
 
-import dev.drzepka.pvstats.autoconfiguration.CachingAutoConfiguration
 import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.common.util.toLocalDate
@@ -8,33 +7,29 @@ import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.InstantValue
-import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.service.DeviceDataService
+import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDate
 import java.util.*
-import javax.cache.CacheManager
 import kotlin.math.floor
 
 @Component
 class SofarMeasurementProcessor(
         private val deviceDataService: DeviceDataService,
-        private val measurementRepository: MeasurementRepository,
-        private val measurementConfig: MeasurementConfig,
-        cacheManager: CacheManager
+        private val measurementService: MeasurementService,
+        private val measurementConfig: MeasurementConfig
 ) : MeasurementProcessor<SofarData>() {
     override val deviceType = DeviceType.SOFAR
-
-    private val lastMeasurementCache = cacheManager.getCache<Any, Any>(CachingAutoConfiguration.CACHE_LAST_MEASUREMENTS)
 
     private val log by Logger()
 
     override fun process(device: Device, data: SofarData) {
         deviceDataService.set(device, DeviceDataService.Property.VENDOR_DATA, data.raw.toByteArray())
 
-        val last = getLastMeasurment(device)
+        val last = measurementService.getLastMeasurement(device, false)
         if (last != null && Instant.now().minusMillis(last.timestamp.toInstant().toEpochMilli()).toEpochMilli() < 50000) {
             log.trace("Data source for device ${device.id} tried to save new measurement too early")
             return
@@ -45,7 +40,7 @@ class SofarMeasurementProcessor(
         else
             createsWithoutPriorMeasurement(device, data)
 
-        saveMeasurement(device, new)
+        measurementService.saveMeasurement(new)
     }
 
     override fun deserialize(data: Any): SofarData = SofarData.deserialize(data)
@@ -150,20 +145,6 @@ class SofarMeasurementProcessor(
                 return currentTotalReal
             }
         }
-    }
-
-    private fun getLastMeasurment(device: Device): EnergyMeasurement? {
-        var last = lastMeasurementCache?.get(device.id) as EnergyMeasurement?
-
-        if (last == null)
-            last = measurementRepository.findLast(device.id)
-
-        return last
-    }
-
-    private fun saveMeasurement(device: Device, measurement: EnergyMeasurement) {
-        measurementRepository.save(measurement)
-        lastMeasurementCache?.put(device.id, measurement)
     }
 
 }

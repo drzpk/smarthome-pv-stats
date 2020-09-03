@@ -32,7 +32,7 @@ class StatsService(
 
     // todo: use polymorphism
     private fun getSMAStats(device: Device): CurrentStats {
-        val lastMeasurement = measurementService.getLastMeasurement(device)
+        val lastMeasurement = measurementService.getLastMeasurement(device)!!
         val yesterdaySummary = dailySummaryService.getLastSummaryFor(device)
         val todayGeneration = if (yesterdaySummary != null) lastMeasurement.totalWh - yesterdaySummary.totalWh else 0
         val power = deviceDataService.getInt(device, DeviceDataService.Property.POWER)
