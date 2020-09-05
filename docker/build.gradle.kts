@@ -73,7 +73,7 @@ tasks.register("copyArtifacts", type = Copy::class) {
     val artifactDir = File(pvStatsProject.buildDir, "libs")
     from(artifactDir) {
         include("*.war")
-        into("src/images/pv-stats")
+        into("images/pv-stats")
         rename(".*", "application.war")
     }
 

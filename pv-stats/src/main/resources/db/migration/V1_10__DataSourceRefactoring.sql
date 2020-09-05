@@ -6,10 +6,24 @@ select group_concat('\'', user, '\'@\'', host, '\'')
 into @usersToDelete
 FROM mysql.user
 WHERE user like 'viewer_%';
-set @usersToDelete = concat('drop user ', @usersToDelete);
-prepare stmt from @usersToDelete;
-execute stmt;
-flush privileges;
+
+drop procedure if exists delete_old_users;
+delimiter $$
+
+create procedure delete_old_users()
+begin
+    if @usersToDelete is not null then
+        set @usersToDelete = concat('drop user ', @usersToDelete);
+        prepare stmt from @usersToDelete;
+        execute stmt;
+        flush privileges;
+    end if;
+end $$
+
+delimiter ;
+
+call delete_old_users();
+drop procedure if exists delete_old_users;
 
 # Existing data isn't compatible with new table layout and needs to be recreated
 truncate table data_source;

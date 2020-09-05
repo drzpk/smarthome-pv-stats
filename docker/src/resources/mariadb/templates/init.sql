@@ -5,7 +5,9 @@ create user if not exists ${PV_STATS_DB_USER}@`%` identified by '${PV_STATS_DB_P
 revoke all privileges, grant option from ${PV_STATS_DB_USER}@`%`;
 flush privileges;
 
-grant all privileges on ${PV_STATS_DB_SCHEMA}.* to ${PV_STATS_DB_USER}@`%`;
-grant create user on `data\_%`.* to ${PV_STATS_DB_USER}@`%`;
-grant grant option on `data\_%`.* to ${PV_STATS_DB_USER}@`%`;
+grant all privileges on *.* to ${PV_STATS_DB_USER}@`%` with grant option;
+
+# Remove anonymous users
+delete from mysql.user where user = '';
+
 flush privileges;

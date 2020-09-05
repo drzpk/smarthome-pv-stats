@@ -15,4 +15,4 @@ if [ -f $file ]; then
   echo "Backup file $file already exists and will be replaced"
 fi
 
-tar -zcf "$file" ../resources/grafana-data/*
+tar -zcf "$file" ../data/grafana/*
