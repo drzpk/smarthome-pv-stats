@@ -1,0 +1,2 @@
+# Migration scripts checksum compatibility
+*.sql text eol=crlf
