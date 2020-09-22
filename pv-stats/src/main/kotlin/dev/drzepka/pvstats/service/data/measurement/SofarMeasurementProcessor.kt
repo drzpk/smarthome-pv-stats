@@ -1,8 +1,5 @@
 package dev.drzepka.pvstats.service.data.measurement
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.SofarData
-import dev.drzepka.pvstats.common.util.toLocalDate
 import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
@@ -10,6 +7,9 @@ import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
+import dev.drzepka.smarthome.common.util.toLocalDate
 import org.springframework.stereotype.Component
 import java.time.Instant
 import java.time.LocalDate

@@ -4,7 +4,6 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.mock
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
@@ -12,6 +11,7 @@ import dev.drzepka.pvstats.repository.EnergyMeasurementDailySummaryRepository
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.service.data.summary.Summary
 import dev.drzepka.pvstats.service.data.summary.SummaryProcessor
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import java.time.Duration

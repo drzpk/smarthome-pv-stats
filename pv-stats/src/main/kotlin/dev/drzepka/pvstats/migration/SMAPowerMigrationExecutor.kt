@@ -1,11 +1,11 @@
 package dev.drzepka.pvstats.migration
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId

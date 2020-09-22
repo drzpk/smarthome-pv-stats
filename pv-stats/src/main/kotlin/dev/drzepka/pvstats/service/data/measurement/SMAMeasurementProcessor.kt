@@ -1,14 +1,14 @@
 package dev.drzepka.pvstats.service.data.measurement
 
-import dev.drzepka.pvstats.common.model.sma.Entry
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.SMAData
 import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.sma.Entry
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SMAData
 import org.springframework.stereotype.Component
 import java.util.*
 import kotlin.math.floor

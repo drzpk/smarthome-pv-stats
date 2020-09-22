@@ -1,11 +1,11 @@
 package dev.drzepka.pvstats.service
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.ApplicationException
 import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.util.Logger
 import dev.drzepka.pvstats.util.ValidationUtils
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import org.springframework.stereotype.Service
 
 @Service

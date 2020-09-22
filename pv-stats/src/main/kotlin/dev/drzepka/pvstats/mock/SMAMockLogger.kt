@@ -1,15 +1,15 @@
 package dev.drzepka.pvstats.mock
 
-import dev.drzepka.pvstats.common.model.PutDataRequest
-import dev.drzepka.pvstats.common.model.sma.Entry
-import dev.drzepka.pvstats.common.model.sma.SMADashValues
-import dev.drzepka.pvstats.common.model.sma.SMADeviceData
-import dev.drzepka.pvstats.common.model.sma.SMAMeasurement
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.SMAData
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.repository.MeasurementRepository
 import dev.drzepka.pvstats.web.DataController
+import dev.drzepka.smarthome.common.pvstats.model.PutDataRequest
+import dev.drzepka.smarthome.common.pvstats.model.sma.Entry
+import dev.drzepka.smarthome.common.pvstats.model.sma.SMADashValues
+import dev.drzepka.smarthome.common.pvstats.model.sma.SMADeviceData
+import dev.drzepka.smarthome.common.pvstats.model.sma.SMAMeasurement
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SMAData
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component

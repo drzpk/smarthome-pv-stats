@@ -1,10 +1,10 @@
 package dev.drzepka.pvstats.service.command.device
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.service.DeviceService
 import dev.drzepka.pvstats.service.command.Argument
 import dev.drzepka.pvstats.service.command.Command
 import dev.drzepka.pvstats.util.CommandUtils
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import org.springframework.stereotype.Component
 
 @Component

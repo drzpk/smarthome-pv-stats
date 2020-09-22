@@ -1,13 +1,13 @@
 package dev.drzepka.pvstats.service
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.SofarData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.CurrentStats
 import dev.drzepka.pvstats.model.DataSourceUserDetails
 import dev.drzepka.pvstats.service.data.DailySummaryService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.time.Instant

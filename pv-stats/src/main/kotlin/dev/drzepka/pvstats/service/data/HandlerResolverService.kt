@@ -1,9 +1,9 @@
 package dev.drzepka.pvstats.service.data
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.VendorData
 import dev.drzepka.pvstats.service.data.measurement.MeasurementProcessor
 import dev.drzepka.pvstats.service.data.summary.SummaryProcessor
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.VendorData
 import org.springframework.stereotype.Service
 
 @Service

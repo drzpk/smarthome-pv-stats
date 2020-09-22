@@ -1,8 +1,8 @@
 package dev.drzepka.pvstats.web
 
-import dev.drzepka.pvstats.common.model.PutDataRequest
 import dev.drzepka.pvstats.service.data.HandlerResolverService
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.PutDataRequest
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody

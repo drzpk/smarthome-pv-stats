@@ -1,11 +1,11 @@
 package dev.drzepka.pvstats.service.data.measurement
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
-import dev.drzepka.pvstats.common.model.vendor.VendorData
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.model.DataSourceUserDetails
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.VendorData
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 

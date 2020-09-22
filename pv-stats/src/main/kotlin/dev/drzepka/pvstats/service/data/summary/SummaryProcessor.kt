@@ -1,9 +1,9 @@
 package dev.drzepka.pvstats.service.data.summary
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.entity.EnergyMeasurementDailySummary
 import dev.drzepka.pvstats.util.Logger
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import java.util.*
 import kotlin.math.max
 

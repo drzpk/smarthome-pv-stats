@@ -4,14 +4,14 @@ import com.nhaarman.mockitokotlin2.any
 import com.nhaarman.mockitokotlin2.doAnswer
 import com.nhaarman.mockitokotlin2.eq
 import com.nhaarman.mockitokotlin2.mock
-import dev.drzepka.pvstats.common.model.vendor.SofarData
-import dev.drzepka.pvstats.common.util.hexStringToBytes
 import dev.drzepka.pvstats.config.MeasurementConfig
 import dev.drzepka.pvstats.entity.Device
 import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
+import dev.drzepka.smarthome.common.util.hexStringToBytes
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test

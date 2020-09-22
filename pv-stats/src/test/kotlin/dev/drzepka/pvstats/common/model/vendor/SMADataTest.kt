@@ -1,8 +1,9 @@
 package dev.drzepka.pvstats.common.model.vendor
 
-import dev.drzepka.pvstats.common.model.sma.Entry
-import dev.drzepka.pvstats.common.model.sma.SMADeviceData
-import dev.drzepka.pvstats.common.model.sma.SMAMeasurement
+import dev.drzepka.smarthome.common.pvstats.model.sma.Entry
+import dev.drzepka.smarthome.common.pvstats.model.sma.SMADeviceData
+import dev.drzepka.smarthome.common.pvstats.model.sma.SMAMeasurement
+import dev.drzepka.smarthome.common.pvstats.model.vendor.SMAData
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Test
 import java.time.Instant

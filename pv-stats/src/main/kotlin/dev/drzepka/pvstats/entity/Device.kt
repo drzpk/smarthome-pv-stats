@@ -1,6 +1,6 @@
 package dev.drzepka.pvstats.entity
 
-import dev.drzepka.pvstats.common.model.vendor.DeviceType
+import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import java.util.*
 import javax.persistence.*
 
