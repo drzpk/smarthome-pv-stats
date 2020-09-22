@@ -20,20 +20,20 @@ class SchemaManagementRepositoryImpl(private val entityManager: EntityManager) :
 
     override fun createSchema(name: String) {
         validateString(name)
-        val queryString = "create schema `$name`"
+        val queryString = "create schema if not exists $name"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 
     override fun dropSchema(name: String) {
         validateString(name)
-        val queryString = "drop schema $name"
+        val queryString = "drop schema if exists $name"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 
     override fun createUser(user: String, password: String) {
         validateString(user)
         validateString(password)
-        val queryString = "create user `$user`@`%` identified by '$password'"
+        val queryString = "create user if not exists $user@`%` identified by '$password'"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 
@@ -46,14 +46,14 @@ class SchemaManagementRepositoryImpl(private val entityManager: EntityManager) :
     override fun changeUserPassword(user: String, password: String) {
         validateString(user)
         validateString(password)
-        val queryString = "alter user `$user`@`%` identified by '$password'"
+        val queryString = "alter user $user@`%` identified by '$password'"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 
     override fun grantSelectPrivilegesToSchema(user: String, schema: String) {
         validateString(user)
         validateString(schema)
-        val queryString = "grant select on `$schema`.* to `$user`@`%`"
+        val queryString = "grant select on $schema.* to $user@`%`"
         entityManager.createNativeQuery(queryString).executeUpdate()
     }
 

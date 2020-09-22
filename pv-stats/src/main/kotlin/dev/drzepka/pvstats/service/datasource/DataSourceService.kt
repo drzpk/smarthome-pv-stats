@@ -37,7 +37,7 @@ class DataSourceService(
         }
     }
 
-    @Transactional(Transactional.TxType.REQUIRES_NEW)
+    @Transactional(value = Transactional.TxType.REQUIRES_NEW, rollbackOn = [Exception::class])
     fun createDataSource(deviceId: Int): DataSourceCredentials {
         log.info("Creating new data source for device $deviceId")
         val device = deviceService.getDevice(deviceId)
@@ -59,9 +59,18 @@ class DataSourceService(
         log.info("Created data source $dataSource")
 
         val credentials = DataSourceCredentials(dataSource, plainPassword)
-        createUser(credentials)
-        createSchema(dataSource.schema)
-        recreateViewsAndPrivileges(dataSource)
+        try {
+            // User must be dropped first  (prevents MySQL error 1396 - https://stackoverflow.com/a/31233378)
+            deleteUser(credentials.dataSource.user)
+            createUser(credentials)
+            createSchema(dataSource.schema)
+            recreateViewsAndPrivileges(dataSource)
+        } catch (exception: Throwable) {
+            log.error("Exception caught while modifying schema - rolling back changes", exception)
+            deleteUser(credentials.dataSource.user)
+            deleteSchema(dataSource.schema)
+            throw exception
+        }
 
         return credentials
     }
@@ -122,7 +131,7 @@ class DataSourceService(
     }
 
     private fun createSchema(schemaName: String) {
-        log.info("Creating scheam $schemaName")
+        log.info("Creating schema $schemaName")
         schemaManagementRepository.createSchema(schemaName)
     }
 

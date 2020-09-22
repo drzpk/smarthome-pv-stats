@@ -19,6 +19,12 @@ after each change of the `.env` file.
 3. Trigger resources update: `scripts/update_resources.sh`.
 4. Start all services: `docker-compose up -d`.
 
+
+
+// todo: if mariadb init script is changed it has to be executed manually!!!!!
+
+
+
 ### Obtaining SSL certificate (Let's encrypt)
 ENV file requires providing the location of cartificate and private key files.
 Those files can be obtained using the following instructions.
