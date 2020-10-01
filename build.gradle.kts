@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-subprojects {
+allprojects {
     group = "dev.drzepka.smarthome"
     version = "1.3.0"
 }
