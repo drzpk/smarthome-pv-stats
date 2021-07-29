@@ -1,5 +1,6 @@
 package dev.drzepka.pvstats.common.model.vendor
 
+import java.time.Instant
 import java.util.*
 import kotlin.math.floor
 
@@ -58,14 +59,20 @@ class SofarData(val raw: Array<Byte>) : VendorData() {
                     .or(raw[offset + 2].toInt().and(0xff).shl(8))
                     .or(raw[offset + 3].toInt().and(0xff))
 
-    override fun serialize(): Any = Base64.getEncoder().encodeToString(raw.toByteArray())
+    override fun serialize(): Any = Instant.now().toEpochMilli().toString() + SERIALIZATION_SEPARATOR + Base64.getEncoder().encodeToString(raw.toByteArray())
 
     companion object Offsets {
         fun deserialize(data: Any): SofarData {
-            assert(data is String) { "Unknown data type: ${data::class.java.simpleName}" }
-            val raw = Base64.getDecoder().decode(data as String)
+            if (data !is String)
+                throw IllegalArgumentException("Unknown data type: ${data::class.java.simpleName}")
+
+            val split = data.split(SERIALIZATION_SEPARATOR)
+            val raw = Base64.getDecoder().decode(split[1])
+
             return SofarData(raw.toTypedArray())
         }
+
+        private const val SERIALIZATION_SEPARATOR = ":"
 
         // Basic info
         private const val OPERATING_STATE = 1
