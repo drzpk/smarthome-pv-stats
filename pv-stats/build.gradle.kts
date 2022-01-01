@@ -69,3 +69,11 @@ tasks.withType<KotlinCompile> {
         jvmTarget = "1.8"
     }
 }
+
+tasks.withType<ProcessResources> {
+    // Normalize line endings
+    filesMatching("db/migration/*") {
+        val regex = Regex("(?<!\r)\n")
+        filter { it.replace(regex, "\r\n") }
+    }
+}
