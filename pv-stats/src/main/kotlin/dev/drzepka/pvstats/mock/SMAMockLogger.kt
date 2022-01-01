@@ -1,7 +1,11 @@
 package dev.drzepka.pvstats.mock
 
+import dev.drzepka.pvstats.entity.DataSource
 import dev.drzepka.pvstats.entity.EnergyMeasurement
+import dev.drzepka.pvstats.model.DataSourceUserDetails
+import dev.drzepka.pvstats.repository.DeviceRepository
 import dev.drzepka.pvstats.repository.MeasurementRepository
+import dev.drzepka.pvstats.util.MockLoader
 import dev.drzepka.pvstats.web.DataController
 import dev.drzepka.smarthome.common.pvstats.model.PutDataRequest
 import dev.drzepka.smarthome.common.pvstats.model.sma.Entry
@@ -12,13 +16,15 @@ import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
 import dev.drzepka.smarthome.common.pvstats.model.vendor.SMAData
 import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.security.authentication.TestingAuthenticationToken
+import org.springframework.security.core.Authentication
+import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.*
-import kotlin.collections.ArrayList
 import kotlin.math.floor
 import kotlin.random.Random
 
@@ -26,10 +32,19 @@ import kotlin.random.Random
 @Profile("mock")
 class SMAMockLogger(
         private val measurementRepository: MeasurementRepository,
+        deviceRepository: DeviceRepository,
         private val dataController: DataController
 ) {
 
     private val random = Random.Default
+    private val mockAuthentication: Authentication
+
+    init {
+        val dataSource = DataSource()
+        dataSource.device = deviceRepository.findByName(MockLoader.MOCK_DEVICE_NAME)
+
+        mockAuthentication = TestingAuthenticationToken(DataSourceUserDetails(dataSource), "mock")
+    }
 
     @Scheduled(cron = "0 0/1 * * * *")
     fun logData() {
@@ -39,6 +54,7 @@ class SMAMockLogger(
         request.type = DeviceType.SMA
         request.data = data.serialize()
 
+        SecurityContextHolder.getContext().authentication = mockAuthentication
         dataController.putData(request)
     }
 
@@ -69,11 +85,18 @@ class SMAMockLogger(
         return createData(entries)
     }
 
-    private fun getDashValues(): SMADashValues {
-        return object : SMADashValues() {
-            override fun getPower(): Int = Random.Default.nextInt(500, 3000)
-            override fun getDeviceName(): String = "Test SMA device"
-        }
+    private fun getDashValues(): SMADashValues = SMADashValues().apply {
+        val randomPower = Random.Default.nextInt(500, 3000)
+        this["result"] = mapOf<String, Any>(
+                "some_device_name" to mapOf(
+                        "6100_40263F00" to mapOf(
+                                "1" to listOf(mapOf("val" to randomPower))
+                        ),
+                        "6800_10821E00" to mapOf(
+                                "1" to listOf(mapOf("val" to "test SMA device"))
+                        )
+                )
+        )
     }
 
     private fun getRandomEntry(previous: Entry): Entry {

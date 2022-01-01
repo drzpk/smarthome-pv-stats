@@ -31,6 +31,6 @@ class MockLoader(private val deviceRepository: DeviceRepository) {
     }
 
     companion object {
-        private const val MOCK_DEVICE_NAME = "__mock_device__"
+        const val MOCK_DEVICE_NAME = "__mock_device__"
     }
 }
