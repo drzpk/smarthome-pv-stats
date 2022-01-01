@@ -10,9 +10,13 @@ jib {
     to {
         image = "registry.gitlab.com/smart-home-dr/pv-stats/pv-stats"
         tags = setOf(project.version as String)
-        auth {
-            username = "d_rzepka"
-            password = getContainerRegistryToken()
+
+        val token = getContainerRegistryToken()
+        if (token != null) {
+            auth {
+                username = "d_rzepka"
+                password = token
+            }
         }
     }
     container {
@@ -36,19 +40,9 @@ jib {
     }
 }
 
-fun getContainerRegistryToken(): String {
-    val ciToken = System.getenv("CI_JOB_TOKEN")
-    if (ciToken != null)
-        return ciToken
-
+fun getContainerRegistryToken(): String? {
     // from ~/.gradle/gradle.properties
-    val privateToken = findProperty("gitLabPrivateToken") as String?
-    return if (privateToken == null) {
-        logger.warn("Container registry token is missing, publishing will fail")
-        ""
-    } else {
-        privateToken
-    }
+    return findProperty("gitLabPrivateToken") as String?
 }
 
 fun getArtifactName(): String {

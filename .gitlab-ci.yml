@@ -37,6 +37,10 @@ docker:
   stage: publish
   script:
     - chmod +x gradlew
-    - ./gradlew jib
+    - >-
+      ./gradlew jib
+      -Djib.to.auth.username=$CI_REGISTRY_USER
+      -Djib.to.auth.password=$CI_REGISTRY_PASSWORD
+      -Djib.console=plain
   only:
     - tags
