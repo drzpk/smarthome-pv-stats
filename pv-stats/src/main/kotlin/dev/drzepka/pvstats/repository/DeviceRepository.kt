@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository
 interface DeviceRepository : CrudRepository<Device, Int> {
 
     fun findByActive(active: Boolean): List<Device>
+
+    fun findByName(name: String): Device?
 }

@@ -19,19 +19,18 @@ class MockLoader(private val deviceRepository: DeviceRepository) {
     }
 
     private fun createMockDeviceIfNotExists() {
-        if (deviceRepository.findById(MOCK_DEVICE_ID).isPresent)
+        if (deviceRepository.findByName(MOCK_DEVICE_NAME) != null)
             return
 
         log.info("Mock device doesn't exist, creating")
 
         val device = Device()
-        device.id = MOCK_DEVICE_ID
-        device.name = "mock device"
+        device.name = MOCK_DEVICE_NAME
         device.type = DeviceType.SMA
         deviceRepository.save(device)
     }
 
     companion object {
-        private const val MOCK_DEVICE_ID = 0xdead
+        private const val MOCK_DEVICE_NAME = "__mock_device__"
     }
 }
