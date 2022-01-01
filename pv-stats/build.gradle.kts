@@ -33,9 +33,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
     implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.1")
     implementation("org.springframework.session:spring-session-core")
-    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.1")
     implementation("javax.cache:cache-api:1.1.1")
     implementation("org.ehcache:ehcache:3.8.1")
+
+    implementation("org.apache.logging.log4j:log4j-core:2.17.1")
+    implementation("org.apache.logging.log4j:log4j-api:2.17.1")
+    implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.1")
 
     runtimeOnly("org.mariadb.jdbc:mariadb-java-client:2.6.0")
 
