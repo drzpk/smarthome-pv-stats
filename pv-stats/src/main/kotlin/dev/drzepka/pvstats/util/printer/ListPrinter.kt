@@ -12,7 +12,7 @@ class ListPrinter {
     fun appendRow(name: String, value: Boolean) = keyValueRows.add(Pair(name, if (value) "Yes" else "No"))
 
     fun print(): Array<String> {
-        val maxKeyLength = keyValueRows.map { it.first.length }.max()!!
+        val maxKeyLength = keyValueRows.maxOf { it.first.length }
         val result = Array(keyValueRows.size + 3) { "" }
         result[1] = header
         result[2] = "-".repeat(maxKeyLength + 1)

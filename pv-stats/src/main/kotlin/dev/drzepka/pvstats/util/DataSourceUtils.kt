@@ -17,7 +17,7 @@ object DataSourceUtils {
 
     private fun normalize(input: String, maxLength: Int): String {
         val normalized = Normalizer.normalize(input, Normalizer.Form.NFD)
-                .toLowerCase()
+                .lowercase()
                 .replace(" ", "_")
                 .replace(illegalCharRegex, "")
 

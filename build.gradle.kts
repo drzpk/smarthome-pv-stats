@@ -1,5 +1,4 @@
 plugins {
-    id("maven")
     id("maven-publish")
 }
 
@@ -10,7 +9,6 @@ allprojects {
 
 allprojects {
     repositories {
-        jcenter()
         mavenCentral()
         mavenLocal()
 

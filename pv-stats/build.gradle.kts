@@ -1,12 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id("org.springframework.boot") version "2.2.6.RELEASE"
-    id("io.spring.dependency-management") version "1.0.9.RELEASE"
+    id("org.springframework.boot") version "2.6.2"
+    id("io.spring.dependency-management") version "1.0.11.RELEASE"
     id("war")
-    kotlin("jvm") version "1.3.71"
-    kotlin("plugin.spring") version "1.3.71"
-    kotlin("plugin.jpa") version "1.3.71"
+    kotlin("jvm") version "1.6.10"
+    kotlin("plugin.spring") version "1.6.10"
+    kotlin("plugin.jpa") version "1.6.10"
 }
 
 java.sourceCompatibility = JavaVersion.VERSION_1_8
@@ -22,7 +22,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
     implementation("org.springframework.boot:spring-boot-devtools")
-    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:2.2.2.RELEASE")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:3.1.0")
     implementation("io.github.openfeign:feign-okhttp:11.0")
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.10.3")
@@ -31,7 +31,7 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
-    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.1.2")
+    implementation("org.mybatis.spring.boot:mybatis-spring-boot-starter:2.2.1")
     implementation("org.springframework.session:spring-session-core")
     implementation("org.apache.logging.log4j:log4j-slf4j-impl:2.13.1")
     implementation("javax.cache:cache-api:1.1.1")
