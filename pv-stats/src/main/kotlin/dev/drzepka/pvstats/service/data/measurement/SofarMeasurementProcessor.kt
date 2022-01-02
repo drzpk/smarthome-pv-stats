@@ -8,7 +8,8 @@ import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
 import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
-import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
+import dev.drzepka.smarthome.common.pvstats.model.vendor.sofar.SofarData
+import dev.drzepka.smarthome.common.pvstats.model.vendor.sofar.SofarDataImpl
 import dev.drzepka.smarthome.common.util.toLocalDate
 import org.springframework.stereotype.Component
 import java.time.Instant
@@ -27,7 +28,7 @@ class SofarMeasurementProcessor(
     private val log by Logger()
 
     override fun process(device: Device, data: SofarData) {
-        deviceDataService.set(device, DeviceDataService.Property.VENDOR_DATA, data.raw.toByteArray())
+        deviceDataService.set(device, DeviceDataService.Property.VENDOR_DATA, data.serialize() as String)
 
         val last = measurementService.getLastMeasurement(device, false)
         if (last != null && Instant.now().minusMillis(last.timestamp.toInstant().toEpochMilli()).toEpochMilli() < 50000) {
@@ -43,7 +44,7 @@ class SofarMeasurementProcessor(
         measurementService.saveMeasurement(new)
     }
 
-    override fun deserialize(data: Any): SofarData = SofarData.deserialize(data)
+    override fun deserialize(data: Any): SofarDataImpl = SofarDataImpl.deserialize(data)
 
     private fun createWithPriorMeasurement(device: Device, last: EnergyMeasurement, data: SofarData): EnergyMeasurement {
         var previousDaily = deviceDataService.getInt(device, DeviceDataService.Property.DAILY_PRODUCTION)

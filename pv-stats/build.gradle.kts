@@ -12,7 +12,7 @@ plugins {
 java.sourceCompatibility = JavaVersion.VERSION_1_8
 
 dependencies {
-    implementation("dev.drzepka.smarthome:common:1.0.+")
+    implementation("dev.drzepka.smarthome:common:1.1.+")
     implementation("org.springframework.boot:spring-boot-starter-batch") {
         exclude(group = "org.springframework.boot", module = "spring-boot-starter-logging")
     }

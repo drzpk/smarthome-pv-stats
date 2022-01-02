@@ -7,7 +7,7 @@ import dev.drzepka.pvstats.service.data.DailySummaryService
 import dev.drzepka.pvstats.service.data.MeasurementService
 import dev.drzepka.pvstats.util.Logger
 import dev.drzepka.smarthome.common.pvstats.model.vendor.DeviceType
-import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
+import dev.drzepka.smarthome.common.pvstats.model.vendor.sofar.SofarDataImpl
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Service
 import java.time.Instant
@@ -47,13 +47,13 @@ class StatsService(
 
     @Suppress("UNCHECKED_CAST")
     private fun getSofarStats(device: Device): CurrentStats {
-        val rawData = deviceDataService.getBytes(device, DeviceDataService.Property.VENDOR_DATA)
+        val rawData = deviceDataService.getString(device, DeviceDataService.Property.VENDOR_DATA)
         if (rawData == null) {
             log.debug("No vendor data for device $device")
             return CurrentStats(-1, device.name, -1)
         }
 
-        val sofarData = SofarData(rawData.value.toTypedArray())
+        val sofarData = SofarDataImpl.deserialize(rawData.value)
         val curremtPower = if (rawData.instant.isAfter(Instant.now().minusSeconds(600)))
             sofarData.currentPower
         else

@@ -10,7 +10,8 @@ import dev.drzepka.pvstats.entity.EnergyMeasurement
 import dev.drzepka.pvstats.model.InstantValue
 import dev.drzepka.pvstats.service.DeviceDataService
 import dev.drzepka.pvstats.service.data.MeasurementService
-import dev.drzepka.smarthome.common.pvstats.model.vendor.SofarData
+import dev.drzepka.smarthome.common.pvstats.model.vendor.sofar.SofarData
+import dev.drzepka.smarthome.common.pvstats.model.vendor.sofar.SofarDataImpl
 import dev.drzepka.smarthome.common.util.hexStringToBytes
 import org.assertj.core.api.BDDAssertions.then
 import org.junit.jupiter.api.Assertions
@@ -91,6 +92,6 @@ class SofarMeasurementProcessorTest {
                 "0000400000002c093302800026003219e00f18031d003c000000010000054d087206cdccad0315")
 
         // No time to create mock class so I'm using
-        return SofarData(bytes.copyOfRange(27, bytes.size))
+        return SofarDataImpl(bytes.copyOfRange(27, bytes.size))
     }
 }
