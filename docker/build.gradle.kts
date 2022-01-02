@@ -20,7 +20,7 @@ jib {
         }
     }
     container {
-        val archiveName = getArtifactName()
+        val archiveName = "pv-stats-${version}.war"
         entrypoint = listOf("java", "-jar", "/app/$archiveName")
         ports = listOf("8080")
         workingDirectory = "/app"
@@ -40,24 +40,11 @@ jib {
     }
 }
 
+tasks.withType<com.google.cloud.tools.jib.gradle.JibTask> {
+    dependsOn(":pv-stats:cleanBootWar")
+}
+
 fun getContainerRegistryToken(): String? {
     // from ~/.gradle/gradle.properties
     return findProperty("gitLabPrivateToken") as String?
-}
-
-fun getArtifactName(): String {
-    return project(":pv-stats").let {
-        val libsDir = File(it.buildDir, "libs")
-        if (libsDir.isDirectory) {
-            val list = libsDir.listFiles()!!
-            if (list.isNotEmpty()) {
-                val name = list[0].name
-                logger.info("pv-stats argifact found: $name")
-                name
-            } else {
-                logger.error("pv-stats artifact wasn't found")
-                null
-            }
-        } else null
-    } ?: "unknown.war"
 }

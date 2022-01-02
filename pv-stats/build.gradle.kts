@@ -59,6 +59,13 @@ configurations {
     }
 }
 
+tasks {
+    named("cleanBootWar") {
+        dependsOn(clean)
+        finalizedBy(bootWar)
+    }
+}
+
 tasks.withType<Test> {
     useJUnitPlatform()
 }
